@@ -6,6 +6,42 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		052DA2072E4BAA5000ABB719 /* Media.swift in Sources */ = {isa = PBXBuildFile; fileRef = 052DA1D22E4BAA5000ABB719 /* Media.swift */; };
+		052DA2082E4BAA5000ABB719 /* SpotDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 052DA2022E4BAA5000ABB719 /* SpotDetailView.swift */; };
+		052DA20A2E4BAA5000ABB719 /* CommentRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 052DA1EE2E4BAA5000ABB719 /* CommentRow.swift */; };
+		052DA20B2E4BAA5000ABB719 /* JournalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 052DA1F82E4BAA5000ABB719 /* JournalView.swift */; };
+		052DA20C2E4BAA5000ABB719 /* SunSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 052DA1D52E4BAA5000ABB719 /* SunSnapshot.swift */; };
+		052DA20D2E4BAA5000ABB719 /* ExifDataView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 052DA1EF2E4BAA5000ABB719 /* ExifDataView.swift */; };
+		052DA20E2E4BAA5000ABB719 /* AccessInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 052DA1D02E4BAA5000ABB719 /* AccessInfo.swift */; };
+		052DA2102E4BAA5000ABB719 /* FilterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 052DA1F32E4BAA5000ABB719 /* FilterView.swift */; };
+		052DA2112E4BAA5000ABB719 /* PlansView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 052DA1FC2E4BAA5000ABB719 /* PlansView.swift */; };
+		052DA2122E4BAA5000ABB719 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 052DA1CD2E4BAA5000ABB719 /* ContentView.swift */; };
+		052DA2132E4BAA5000ABB719 /* Spot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 052DA1D42E4BAA5000ABB719 /* Spot.swift */; };
+		052DA2142E4BAA5000ABB719 /* Plan.swift in Sources */ = {isa = PBXBuildFile; fileRef = 052DA1D32E4BAA5000ABB719 /* Plan.swift */; };
+		052DA2152E4BAA5000ABB719 /* Comment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 052DA1D12E4BAA5000ABB719 /* Comment.swift */; };
+		052DA2162E4BAA5000ABB719 /* CreatePlanView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 052DA1FA2E4BAA5000ABB719 /* CreatePlanView.swift */; };
+		052DA2182E4BAA5000ABB719 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 052DA1FF2E4BAA5000ABB719 /* SettingsView.swift */; };
+		052DA2192E4BAA5000ABB719 /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 052DA1FE2E4BAA5000ABB719 /* ProfileView.swift */; };
+		052DA21A2E4BAA5000ABB719 /* AddSpotView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 052DA1E82E4BAA5000ABB719 /* AddSpotView.swift */; };
+		052DA21B2E4BAA5000ABB719 /* SpotListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 052DA1F62E4BAA5000ABB719 /* SpotListView.swift */; };
+		052DA21C2E4BAA5000ABB719 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 052DA1F42E4BAA5000ABB719 /* HomeView.swift */; };
+		052DA21D2E4BAA5000ABB719 /* PlanDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 052DA1FB2E4BAA5000ABB719 /* PlanDetailView.swift */; };
+		052DA21F2E4BAA5000ABB719 /* User.swift in Sources */ = {isa = PBXBuildFile; fileRef = 052DA1D62E4BAA5000ABB719 /* User.swift */; };
+		052DA2202E4BAA5000ABB719 /* RouteStep.swift in Sources */ = {isa = PBXBuildFile; fileRef = 052DA1EB2E4BAA5000ABB719 /* RouteStep.swift */; };
+		052DA2212E4BAA5000ABB719 /* MapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 052DA1F52E4BAA5000ABB719 /* MapView.swift */; };
+		052DA2222E4BAA5000ABB719 /* MetadataConfirmStep.swift in Sources */ = {isa = PBXBuildFile; fileRef = 052DA1E92E4BAA5000ABB719 /* MetadataConfirmStep.swift */; };
+		052DA2242E4BAA5000ABB719 /* AddToPlanView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 052DA2012E4BAA5000ABB719 /* AddToPlanView.swift */; };
+		052DA2252E4BAA5000ABB719 /* WeatherSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 052DA1D72E4BAA5000ABB719 /* WeatherSnapshot.swift */; };
+		052DA2262E4BAA5000ABB719 /* ScenicApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 052DA1CE2E4BAA5000ABB719 /* ScenicApp.swift */; };
+		052DA2272E4BAA5000ABB719 /* PublishStep.swift in Sources */ = {isa = PBXBuildFile; fileRef = 052DA1EA2E4BAA5000ABB719 /* PublishStep.swift */; };
+		052DA2282E4BAA5000ABB719 /* SunTimesWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 052DA1F02E4BAA5000ABB719 /* SunTimesWidget.swift */; };
+		052DA2292E4BAA5000ABB719 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 052DA1CC2E4BAA5000ABB719 /* AppState.swift */; };
+		052DA22A2E4BAA5000ABB719 /* WeatherWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 052DA1F12E4BAA5000ABB719 /* WeatherWidget.swift */; };
+		052DA22B2E4BAA5000ABB719 /* AccessInfoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 052DA1ED2E4BAA5000ABB719 /* AccessInfoView.swift */; };
+		052DA22F2E4BB3FF00ABB719 /* PhotoMetadataExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 052DA22E2E4BB3FF00ABB719 /* PhotoMetadataExtractor.swift */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		052DA1AE2E4B9F4700ABB719 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -27,22 +63,62 @@
 		052DA1A02E4B9F4600ABB719 /* Scenic.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Scenic.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		052DA1AD2E4B9F4700ABB719 /* ScenicTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ScenicTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		052DA1B72E4B9F4700ABB719 /* ScenicUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ScenicUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		052DA1CC2E4BAA5000ABB719 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
+		052DA1CD2E4BAA5000ABB719 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		052DA1CE2E4BAA5000ABB719 /* ScenicApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScenicApp.swift; sourceTree = "<group>"; };
+		052DA1D02E4BAA5000ABB719 /* AccessInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessInfo.swift; sourceTree = "<group>"; };
+		052DA1D12E4BAA5000ABB719 /* Comment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Comment.swift; sourceTree = "<group>"; };
+		052DA1D22E4BAA5000ABB719 /* Media.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Media.swift; sourceTree = "<group>"; };
+		052DA1D32E4BAA5000ABB719 /* Plan.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Plan.swift; sourceTree = "<group>"; };
+		052DA1D42E4BAA5000ABB719 /* Spot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Spot.swift; sourceTree = "<group>"; };
+		052DA1D52E4BAA5000ABB719 /* SunSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SunSnapshot.swift; sourceTree = "<group>"; };
+		052DA1D62E4BAA5000ABB719 /* User.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = User.swift; sourceTree = "<group>"; };
+		052DA1D72E4BAA5000ABB719 /* WeatherSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherSnapshot.swift; sourceTree = "<group>"; };
+		052DA1DA2E4BAA5000ABB719 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		052DA1DC2E4BAA5000ABB719 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		052DA1DF2E4BAA5000ABB719 /* Scenic.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = Scenic.xcodeproj; sourceTree = "<group>"; };
+		052DA1E82E4BAA5000ABB719 /* AddSpotView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddSpotView.swift; sourceTree = "<group>"; };
+		052DA1E92E4BAA5000ABB719 /* MetadataConfirmStep.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetadataConfirmStep.swift; sourceTree = "<group>"; };
+		052DA1EA2E4BAA5000ABB719 /* PublishStep.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PublishStep.swift; sourceTree = "<group>"; };
+		052DA1EB2E4BAA5000ABB719 /* RouteStep.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouteStep.swift; sourceTree = "<group>"; };
+		052DA1ED2E4BAA5000ABB719 /* AccessInfoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessInfoView.swift; sourceTree = "<group>"; };
+		052DA1EE2E4BAA5000ABB719 /* CommentRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommentRow.swift; sourceTree = "<group>"; };
+		052DA1EF2E4BAA5000ABB719 /* ExifDataView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExifDataView.swift; sourceTree = "<group>"; };
+		052DA1F02E4BAA5000ABB719 /* SunTimesWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SunTimesWidget.swift; sourceTree = "<group>"; };
+		052DA1F12E4BAA5000ABB719 /* WeatherWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherWidget.swift; sourceTree = "<group>"; };
+		052DA1F32E4BAA5000ABB719 /* FilterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilterView.swift; sourceTree = "<group>"; };
+		052DA1F42E4BAA5000ABB719 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
+		052DA1F52E4BAA5000ABB719 /* MapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapView.swift; sourceTree = "<group>"; };
+		052DA1F62E4BAA5000ABB719 /* SpotListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpotListView.swift; sourceTree = "<group>"; };
+		052DA1F82E4BAA5000ABB719 /* JournalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JournalView.swift; sourceTree = "<group>"; };
+		052DA1FA2E4BAA5000ABB719 /* CreatePlanView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreatePlanView.swift; sourceTree = "<group>"; };
+		052DA1FB2E4BAA5000ABB719 /* PlanDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlanDetailView.swift; sourceTree = "<group>"; };
+		052DA1FC2E4BAA5000ABB719 /* PlansView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlansView.swift; sourceTree = "<group>"; };
+		052DA1FE2E4BAA5000ABB719 /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
+		052DA1FF2E4BAA5000ABB719 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		052DA2012E4BAA5000ABB719 /* AddToPlanView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddToPlanView.swift; sourceTree = "<group>"; };
+		052DA2022E4BAA5000ABB719 /* SpotDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpotDetailView.swift; sourceTree = "<group>"; };
+		052DA22E2E4BB3FF00ABB719 /* PhotoMetadataExtractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoMetadataExtractor.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		052DA1CB2E4B9FCF00ABB719 /* Exceptions for "Scenic" folder in "Scenic" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Assets.xcassets,
+				Info.plist,
+			);
+			target = 052DA19F2E4B9F4600ABB719 /* Scenic */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		052DA1A22E4B9F4600ABB719 /* Scenic */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				052DA1CB2E4B9FCF00ABB719 /* Exceptions for "Scenic" folder in "Scenic" target */,
+			);
 			path = Scenic;
-			sourceTree = "<group>";
-		};
-		052DA1B02E4B9F4700ABB719 /* ScenicTests */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = ScenicTests;
-			sourceTree = "<group>";
-		};
-		052DA1BA2E4B9F4700ABB719 /* ScenicUITests */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = ScenicUITests;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -75,9 +151,16 @@
 		052DA1972E4B9F4600ABB719 = {
 			isa = PBXGroup;
 			children = (
+				052DA1CF2E4BAA5000ABB719 /* App */,
+				052DA1D82E4BAA5000ABB719 /* Models */,
+				052DA1D92E4BAA5000ABB719 /* Resources */,
+				052DA1DE2E4BAA5000ABB719 /* Scenic */,
+				052DA1DF2E4BAA5000ABB719 /* Scenic.xcodeproj */,
+				052DA1E52E4BAA5000ABB719 /* Services */,
+				052DA1E62E4BAA5000ABB719 /* Utilities */,
+				052DA1E72E4BAA5000ABB719 /* ViewModels */,
+				052DA2042E4BAA5000ABB719 /* Views */,
 				052DA1A22E4B9F4600ABB719 /* Scenic */,
-				052DA1B02E4B9F4700ABB719 /* ScenicTests */,
-				052DA1BA2E4B9F4700ABB719 /* ScenicUITests */,
 				052DA1A12E4B9F4600ABB719 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -89,6 +172,158 @@
 				052DA1AD2E4B9F4700ABB719 /* ScenicTests.xctest */,
 				052DA1B72E4B9F4700ABB719 /* ScenicUITests.xctest */,
 			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		052DA1CF2E4BAA5000ABB719 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				052DA1CC2E4BAA5000ABB719 /* AppState.swift */,
+				052DA1CD2E4BAA5000ABB719 /* ContentView.swift */,
+				052DA1CE2E4BAA5000ABB719 /* ScenicApp.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		052DA1D82E4BAA5000ABB719 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				052DA1D02E4BAA5000ABB719 /* AccessInfo.swift */,
+				052DA1D12E4BAA5000ABB719 /* Comment.swift */,
+				052DA1D22E4BAA5000ABB719 /* Media.swift */,
+				052DA1D32E4BAA5000ABB719 /* Plan.swift */,
+				052DA1D42E4BAA5000ABB719 /* Spot.swift */,
+				052DA1D52E4BAA5000ABB719 /* SunSnapshot.swift */,
+				052DA1D62E4BAA5000ABB719 /* User.swift */,
+				052DA1D72E4BAA5000ABB719 /* WeatherSnapshot.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		052DA1D92E4BAA5000ABB719 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		052DA1DE2E4BAA5000ABB719 /* Scenic */ = {
+			isa = PBXGroup;
+			children = (
+				052DA1DA2E4BAA5000ABB719 /* Assets.xcassets */,
+				052DA1DC2E4BAA5000ABB719 /* Info.plist */,
+			);
+			path = Scenic;
+			sourceTree = "<group>";
+		};
+		052DA1E52E4BAA5000ABB719 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				052DA22E2E4BB3FF00ABB719 /* PhotoMetadataExtractor.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		052DA1E62E4BAA5000ABB719 /* Utilities */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Utilities;
+			sourceTree = "<group>";
+		};
+		052DA1E72E4BAA5000ABB719 /* ViewModels */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = ViewModels;
+			sourceTree = "<group>";
+		};
+		052DA1EC2E4BAA5000ABB719 /* Add */ = {
+			isa = PBXGroup;
+			children = (
+				052DA1E82E4BAA5000ABB719 /* AddSpotView.swift */,
+				052DA1E92E4BAA5000ABB719 /* MetadataConfirmStep.swift */,
+				052DA1EA2E4BAA5000ABB719 /* PublishStep.swift */,
+				052DA1EB2E4BAA5000ABB719 /* RouteStep.swift */,
+			);
+			path = Add;
+			sourceTree = "<group>";
+		};
+		052DA1F22E4BAA5000ABB719 /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				052DA1ED2E4BAA5000ABB719 /* AccessInfoView.swift */,
+				052DA1EE2E4BAA5000ABB719 /* CommentRow.swift */,
+				052DA1EF2E4BAA5000ABB719 /* ExifDataView.swift */,
+				052DA1F02E4BAA5000ABB719 /* SunTimesWidget.swift */,
+				052DA1F12E4BAA5000ABB719 /* WeatherWidget.swift */,
+			);
+			path = Components;
+			sourceTree = "<group>";
+		};
+		052DA1F72E4BAA5000ABB719 /* Home */ = {
+			isa = PBXGroup;
+			children = (
+				052DA1F32E4BAA5000ABB719 /* FilterView.swift */,
+				052DA1F42E4BAA5000ABB719 /* HomeView.swift */,
+				052DA1F52E4BAA5000ABB719 /* MapView.swift */,
+				052DA1F62E4BAA5000ABB719 /* SpotListView.swift */,
+			);
+			path = Home;
+			sourceTree = "<group>";
+		};
+		052DA1F92E4BAA5000ABB719 /* Journal */ = {
+			isa = PBXGroup;
+			children = (
+				052DA1F82E4BAA5000ABB719 /* JournalView.swift */,
+			);
+			path = Journal;
+			sourceTree = "<group>";
+		};
+		052DA1FD2E4BAA5000ABB719 /* Plans */ = {
+			isa = PBXGroup;
+			children = (
+				052DA1FA2E4BAA5000ABB719 /* CreatePlanView.swift */,
+				052DA1FB2E4BAA5000ABB719 /* PlanDetailView.swift */,
+				052DA1FC2E4BAA5000ABB719 /* PlansView.swift */,
+			);
+			path = Plans;
+			sourceTree = "<group>";
+		};
+		052DA2002E4BAA5000ABB719 /* Profile */ = {
+			isa = PBXGroup;
+			children = (
+				052DA1FE2E4BAA5000ABB719 /* ProfileView.swift */,
+				052DA1FF2E4BAA5000ABB719 /* SettingsView.swift */,
+			);
+			path = Profile;
+			sourceTree = "<group>";
+		};
+		052DA2032E4BAA5000ABB719 /* Spot */ = {
+			isa = PBXGroup;
+			children = (
+				052DA2012E4BAA5000ABB719 /* AddToPlanView.swift */,
+				052DA2022E4BAA5000ABB719 /* SpotDetailView.swift */,
+			);
+			path = Spot;
+			sourceTree = "<group>";
+		};
+		052DA2042E4BAA5000ABB719 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				052DA1EC2E4BAA5000ABB719 /* Add */,
+				052DA1F22E4BAA5000ABB719 /* Components */,
+				052DA1F72E4BAA5000ABB719 /* Home */,
+				052DA1F92E4BAA5000ABB719 /* Journal */,
+				052DA1FD2E4BAA5000ABB719 /* Plans */,
+				052DA2002E4BAA5000ABB719 /* Profile */,
+				052DA2032E4BAA5000ABB719 /* Spot */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		052DA2052E4BAA5000ABB719 /* Products */ = {
+			isa = PBXGroup;
 			name = Products;
 			sourceTree = "<group>";
 		};
@@ -130,9 +365,6 @@
 			dependencies = (
 				052DA1AF2E4B9F4700ABB719 /* PBXTargetDependency */,
 			);
-			fileSystemSynchronizedGroups = (
-				052DA1B02E4B9F4700ABB719 /* ScenicTests */,
-			);
 			name = ScenicTests;
 			packageProductDependencies = (
 			);
@@ -152,9 +384,6 @@
 			);
 			dependencies = (
 				052DA1B92E4B9F4700ABB719 /* PBXTargetDependency */,
-			);
-			fileSystemSynchronizedGroups = (
-				052DA1BA2E4B9F4700ABB719 /* ScenicUITests */,
 			);
 			name = ScenicUITests;
 			packageProductDependencies = (
@@ -198,6 +427,12 @@
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 052DA1A12E4B9F4600ABB719 /* Products */;
 			projectDirPath = "";
+			projectReferences = (
+				{
+					ProductGroup = 052DA2052E4BAA5000ABB719 /* Products */;
+					ProjectRef = 052DA1DF2E4BAA5000ABB719 /* Scenic.xcodeproj */;
+				},
+			);
 			projectRoot = "";
 			targets = (
 				052DA19F2E4B9F4600ABB719 /* Scenic */,
@@ -236,6 +471,39 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				052DA2072E4BAA5000ABB719 /* Media.swift in Sources */,
+				052DA2082E4BAA5000ABB719 /* SpotDetailView.swift in Sources */,
+				052DA20A2E4BAA5000ABB719 /* CommentRow.swift in Sources */,
+				052DA20B2E4BAA5000ABB719 /* JournalView.swift in Sources */,
+				052DA20C2E4BAA5000ABB719 /* SunSnapshot.swift in Sources */,
+				052DA20D2E4BAA5000ABB719 /* ExifDataView.swift in Sources */,
+				052DA20E2E4BAA5000ABB719 /* AccessInfo.swift in Sources */,
+				052DA2102E4BAA5000ABB719 /* FilterView.swift in Sources */,
+				052DA2112E4BAA5000ABB719 /* PlansView.swift in Sources */,
+				052DA2122E4BAA5000ABB719 /* ContentView.swift in Sources */,
+				052DA2132E4BAA5000ABB719 /* Spot.swift in Sources */,
+				052DA2142E4BAA5000ABB719 /* Plan.swift in Sources */,
+				052DA2152E4BAA5000ABB719 /* Comment.swift in Sources */,
+				052DA2162E4BAA5000ABB719 /* CreatePlanView.swift in Sources */,
+				052DA2182E4BAA5000ABB719 /* SettingsView.swift in Sources */,
+				052DA2192E4BAA5000ABB719 /* ProfileView.swift in Sources */,
+				052DA21A2E4BAA5000ABB719 /* AddSpotView.swift in Sources */,
+				052DA21B2E4BAA5000ABB719 /* SpotListView.swift in Sources */,
+				052DA21C2E4BAA5000ABB719 /* HomeView.swift in Sources */,
+				052DA21D2E4BAA5000ABB719 /* PlanDetailView.swift in Sources */,
+				052DA21F2E4BAA5000ABB719 /* User.swift in Sources */,
+				052DA2202E4BAA5000ABB719 /* RouteStep.swift in Sources */,
+				052DA2212E4BAA5000ABB719 /* MapView.swift in Sources */,
+				052DA2222E4BAA5000ABB719 /* MetadataConfirmStep.swift in Sources */,
+				052DA2242E4BAA5000ABB719 /* AddToPlanView.swift in Sources */,
+				052DA2252E4BAA5000ABB719 /* WeatherSnapshot.swift in Sources */,
+				052DA22F2E4BB3FF00ABB719 /* PhotoMetadataExtractor.swift in Sources */,
+				052DA2262E4BAA5000ABB719 /* ScenicApp.swift in Sources */,
+				052DA2272E4BAA5000ABB719 /* PublishStep.swift in Sources */,
+				052DA2282E4BAA5000ABB719 /* SunTimesWidget.swift in Sources */,
+				052DA2292E4BAA5000ABB719 /* AppState.swift in Sources */,
+				052DA22A2E4BAA5000ABB719 /* WeatherWidget.swift in Sources */,
+				052DA22B2E4BAA5000ABB719 /* AccessInfoView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -400,11 +668,13 @@
 				DEVELOPMENT_TEAM = 55VJA96VBJ;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Scenic/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -428,11 +698,13 @@
 				DEVELOPMENT_TEAM = 55VJA96VBJ;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Scenic/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
