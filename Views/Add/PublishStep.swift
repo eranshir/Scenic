@@ -7,12 +7,12 @@ struct PublishStep: View {
     let onPublish: () -> Void
     let onBack: () -> Void
     
-    @State private var privacy: Spot.Privacy = .publicSpot
     @State private var license = "CC-BY-NC"
     @State private var isPublishing = false
     @State private var showSuccessAlert = false
     @State private var showErrorAlert = false
     @State private var errorMessage = ""
+    @State private var publishedAsPublic = false
     
     var body: some View {
         VStack(spacing: 0) {
@@ -49,76 +49,108 @@ struct PublishStep: View {
                     .cornerRadius(12)
                     .padding(.horizontal)
                     
-                    // Privacy & License
-                    VStack(spacing: 16) {
-                        VStack(alignment: .leading) {
-                            Text("Privacy")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                            
-                            Picker("Privacy", selection: $privacy) {
-                                Text("Public").tag(Spot.Privacy.publicSpot)
-                                Text("Private").tag(Spot.Privacy.privateSpot)
-                            }
-                            .pickerStyle(.segmented)
-                        }
-                        
-                        VStack(alignment: .leading) {
-                            Text("License")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                            
-                            Picker("License", selection: $license) {
-                                Text("CC-BY-NC").tag("CC-BY-NC")
-                                Text("CC-BY").tag("CC-BY")
-                                Text("All Rights Reserved").tag("ARR")
-                            }
-                            .pickerStyle(.menu)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                        }
-                    }
-                    .padding()
-                    .padding(.horizontal)
-                    
-                    // Add some padding at bottom
-                    Color.clear.frame(height: 20)
+                    // Add substantial padding at bottom to ensure content is above tab bar
+                    Color.clear.frame(height: 100)
                 }
             }
             
-            // Action Buttons pinned at bottom
+            // Compact Action Section pinned at bottom
             VStack(spacing: 12) {
-                Button(action: {
-                    Task {
-                        await publishSpot()
-                    }
-                }) {
-                    HStack {
-                        if isPublishing {
-                            ProgressView()
-                                .progressViewStyle(CircularProgressViewStyle())
-                                .scaleEffect(0.8)
-                            Text("Publishing...")
-                        } else {
-                            Image(systemName: "checkmark.circle.fill")
-                            Text("Publish Spot")
+                // Primary Action: Save and Publish (with license chooser)
+                VStack(spacing: 8) {
+                    HStack(spacing: 12) {
+                        // Main publish button
+                        Button(action: {
+                            Task {
+                                await publishSpot(asPublic: true)
+                            }
+                        }) {
+                            HStack {
+                                if isPublishing {
+                                    ProgressView()
+                                        .progressViewStyle(CircularProgressViewStyle())
+                                        .scaleEffect(0.8)
+                                    Text("Publishing...")
+                                        .font(.subheadline)
+                                        .fontWeight(.medium)
+                                } else {
+                                    Image(systemName: "globe")
+                                    Text("Save & Publish")
+                                        .font(.subheadline)
+                                        .fontWeight(.medium)
+                                }
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 14)
+                            .background(spotData.title.isEmpty ? Color.gray : Color.green)
+                            .foregroundColor(.white)
+                            .cornerRadius(10)
                         }
+                        .disabled(spotData.title.isEmpty || isPublishing)
+                        
+                        // Inline license chooser
+                        Picker("License", selection: $license) {
+                            Text("CC-BY-NC").tag("CC-BY-NC")
+                            Text("CC-BY").tag("CC-BY") 
+                            Text("All Rights Reserved").tag("ARR")
+                        }
+                        .pickerStyle(.menu)
+                        .frame(width: 120)
+                        .disabled(spotData.title.isEmpty || isPublishing)
                     }
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(spotData.title.isEmpty ? Color.gray : Color.green)
-                    .foregroundColor(.white)
-                    .cornerRadius(10)
+                    
+                    // Helper text for publishing
+                    Text("Share with the Scenic community under your chosen license")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
                 }
-                .disabled(spotData.title.isEmpty || isPublishing)
                 
-                Button(action: onBack) {
-                    Text("Back to Edit")
-                        .frame(maxWidth: .infinity)
-                        .padding()
+                // Secondary actions row
+                HStack(spacing: 12) {
+                    // Back button (smaller, secondary)
+                    Button(action: onBack) {
+                        HStack {
+                            Image(systemName: "chevron.left")
+                                .font(.caption)
+                            Text("Back")
+                                .font(.footnote)
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 10)
                         .background(Color(.systemGray5))
-                        .cornerRadius(10)
+                        .cornerRadius(8)
+                    }
+                    .disabled(isPublishing)
+                    
+                    // Secondary save-only button
+                    Button(action: {
+                        Task {
+                            await publishSpot(asPublic: false)
+                        }
+                    }) {
+                        HStack {
+                            if isPublishing {
+                                ProgressView()
+                                    .progressViewStyle(CircularProgressViewStyle())
+                                    .scaleEffect(0.8)
+                                Text("Saving...")
+                                    .font(.footnote)
+                            } else {
+                                Image(systemName: "lock.fill")
+                                    .font(.caption)
+                                Text("Just Save")
+                                    .font(.footnote)
+                            }
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 10)
+                        .background(Color(.systemGray4))
+                        .foregroundColor(.white)
+                        .cornerRadius(8)
+                    }
+                    .disabled(spotData.title.isEmpty || isPublishing)
                 }
-                .disabled(isPublishing)
             }
             .padding()
             .background(Color(.systemBackground))
@@ -129,7 +161,7 @@ struct PublishStep: View {
                 onPublish()
             }
         } message: {
-            Text("Your spot has been published successfully!")
+            Text(publishedAsPublic ? "Your spot has been saved to your journal and published to the community!" : "Your spot has been saved to your journal!")
         }
         .alert("Error", isPresented: $showErrorAlert) {
             Button("OK") { }
@@ -204,58 +236,89 @@ struct PublishStep: View {
     
     private var detailsSummary: some View {
         VStack(alignment: .leading, spacing: 12) {
-            // Camera Info
-            if let camera = spotData.cameraModel {
-                detailRow(icon: "camera", title: "Camera", value: camera)
-            }
+            // Always show at least basic info
+            let hasAnyData = spotData.cameraModel != nil || 
+                            spotData.lensModel != nil ||
+                            spotData.focalLength != nil ||
+                            spotData.aperture != nil ||
+                            spotData.iso != nil ||
+                            spotData.shutterSpeed != nil ||
+                            spotData.parkingLocation != nil ||
+                            !spotData.hazards.isEmpty ||
+                            !spotData.fees.isEmpty ||
+                            !spotData.bestTimeNotes.isEmpty ||
+                            !spotData.equipmentTips.isEmpty ||
+                            !spotData.notes.isEmpty
             
-            if let lens = spotData.lensModel {
-                detailRow(icon: "camera.aperture", title: "Lens", value: lens)
-            }
-            
-            // Settings
-            if spotData.focalLength != nil || spotData.aperture != nil || spotData.iso != nil {
-                HStack(spacing: 16) {
-                    if let focal = spotData.focalLength {
-                        settingBadge(label: "\(Int(focal))mm")
+            if !hasAnyData {
+                // Show placeholder when no data is available
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Image(systemName: "info.circle")
+                            .foregroundColor(.secondary)
+                        Text("No additional details provided")
+                            .font(.footnote)
+                            .foregroundColor(.secondary)
                     }
-                    if let aperture = spotData.aperture {
-                        settingBadge(label: String(format: "f/%.1f", aperture))
-                    }
-                    if let iso = spotData.iso {
-                        settingBadge(label: "ISO \(iso)")
-                    }
-                    if let shutter = spotData.shutterSpeed {
-                        settingBadge(label: shutter)
-                    }
+                    Text("You can add camera settings, access information, and tips in the previous steps.")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.leading)
                 }
-                .font(.caption)
-            }
-            
-            // Access Info
-            if spotData.parkingLocation != nil {
-                detailRow(icon: "car.fill", title: "Parking", value: "Location set")
-            }
-            
-            if !spotData.hazards.isEmpty {
-                detailRow(icon: "exclamationmark.triangle", title: "Hazards", value: spotData.hazards.joined(separator: ", "))
-            }
-            
-            if !spotData.fees.isEmpty {
-                detailRow(icon: "dollarsign.circle", title: "Fees", value: spotData.fees.joined(separator: ", "))
-            }
-            
-            // Tips
-            if !spotData.bestTimeNotes.isEmpty {
-                detailRow(icon: "sun.max", title: "Best Time", value: spotData.bestTimeNotes)
-            }
-            
-            if !spotData.equipmentTips.isEmpty {
-                detailRow(icon: "backpack", title: "Equipment", value: spotData.equipmentTips)
-            }
-            
-            if !spotData.notes.isEmpty {
-                detailRow(icon: "note.text", title: "Notes", value: spotData.notes)
+            } else {
+                // Camera Info
+                if let camera = spotData.cameraModel {
+                    detailRow(icon: "camera", title: "Camera", value: camera)
+                }
+                
+                if let lens = spotData.lensModel {
+                    detailRow(icon: "camera.aperture", title: "Lens", value: lens)
+                }
+                
+                // Settings
+                if spotData.focalLength != nil || spotData.aperture != nil || spotData.iso != nil {
+                    HStack(spacing: 16) {
+                        if let focal = spotData.focalLength {
+                            settingBadge(label: "\(Int(focal))mm")
+                        }
+                        if let aperture = spotData.aperture {
+                            settingBadge(label: String(format: "f/%.1f", aperture))
+                        }
+                        if let iso = spotData.iso {
+                            settingBadge(label: "ISO \(iso)")
+                        }
+                        if let shutter = spotData.shutterSpeed {
+                            settingBadge(label: shutter)
+                        }
+                    }
+                    .font(.caption)
+                }
+                
+                // Access Info
+                if spotData.parkingLocation != nil {
+                    detailRow(icon: "car.fill", title: "Parking", value: "Location set")
+                }
+                
+                if !spotData.hazards.isEmpty {
+                    detailRow(icon: "exclamationmark.triangle", title: "Hazards", value: spotData.hazards.joined(separator: ", "))
+                }
+                
+                if !spotData.fees.isEmpty {
+                    detailRow(icon: "dollarsign.circle", title: "Fees", value: spotData.fees.joined(separator: ", "))
+                }
+                
+                // Tips
+                if !spotData.bestTimeNotes.isEmpty {
+                    detailRow(icon: "sun.max", title: "Best Time", value: spotData.bestTimeNotes)
+                }
+                
+                if !spotData.equipmentTips.isEmpty {
+                    detailRow(icon: "backpack", title: "Equipment", value: spotData.equipmentTips)
+                }
+                
+                if !spotData.notes.isEmpty {
+                    detailRow(icon: "note.text", title: "Notes", value: spotData.notes)
+                }
             }
         }
     }
@@ -291,7 +354,7 @@ struct PublishStep: View {
         return difficulty
     }
     
-    private func publishSpot() async {
+    private func publishSpot(asPublic: Bool) async {
         isPublishing = true
         
         // Simulate API call
@@ -299,6 +362,9 @@ struct PublishStep: View {
         
         // Here you would normally make an API call to save the spot
         // For now, we'll just create a local spot and add it to the app state
+        
+        let privacy: Spot.Privacy = asPublic ? .publicSpot : .privateSpot
+        let finalLicense = asPublic ? license : "Private" // Private spots don't need public licenses
         
         var newSpot = Spot(
             id: UUID(),
@@ -310,7 +376,7 @@ struct PublishStep: View {
             difficulty: spotData.difficulty,
             createdBy: UUID(), // This would be the current user's ID
             privacy: privacy,
-            license: license,
+            license: finalLicense,
             status: .active,
             createdAt: Date(),
             updatedAt: Date()
@@ -338,6 +404,7 @@ struct PublishStep: View {
         await MainActor.run {
             // Note: We would need to update AppState to have a spots array
             // For now, just mark as published
+            publishedAsPublic = asPublic
             isPublishing = false
             showSuccessAlert = true
         }
