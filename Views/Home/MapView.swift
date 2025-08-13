@@ -12,7 +12,7 @@ struct MapView: View {
     )
     
     var body: some View {
-        Map(position: $cameraPosition, selection: $selectedSpotId, interactionModes: .all) {
+        Map(position: $cameraPosition, interactionModes: .all, selection: $selectedSpotId) {
             ForEach(mockSpots) { spot in
                 Annotation(spot.title, coordinate: spot.location) {
                     SpotMapPin(spot: spot, isSelected: selectedSpotId == spot.id)
@@ -121,6 +121,22 @@ struct SpotPreviewCard: View {
     }
 }
 
+// Mock media with heading data for testing circular gallery
+let mockMediaWithHeadings = [
+    Media(id: UUID(), spotId: nil, userId: UUID(), type: .photo, url: "IMG_8608", thumbnailUrl: nil, captureTimeUTC: Date(), exifData: ExifData(gpsDirection: 15), device: "iPhone 15 Pro", lens: "Main Camera", focalLengthMM: 24, aperture: 1.78, shutterSpeed: "1/125", iso: 100, presets: [], filters: [], headingFromExif: true, originalFilename: "IMG_8608.HEIC", createdAt: Date()),
+    Media(id: UUID(), spotId: nil, userId: UUID(), type: .photo, url: "IMG_8609", thumbnailUrl: nil, captureTimeUTC: Date(), exifData: ExifData(gpsDirection: 65), device: "iPhone 15 Pro", lens: "Main Camera", focalLengthMM: 24, aperture: 1.78, shutterSpeed: "1/250", iso: 64, presets: [], filters: [], headingFromExif: true, originalFilename: "IMG_8609.HEIC", createdAt: Date()),
+    Media(id: UUID(), spotId: nil, userId: UUID(), type: .photo, url: "IMG_8610", thumbnailUrl: nil, captureTimeUTC: Date(), exifData: ExifData(gpsDirection: 120), device: "iPhone 15 Pro", lens: "Main Camera", focalLengthMM: 24, aperture: 1.78, shutterSpeed: "1/200", iso: 80, presets: [], filters: [], headingFromExif: true, originalFilename: "IMG_8610.HEIC", createdAt: Date()),
+    Media(id: UUID(), spotId: nil, userId: UUID(), type: .photo, url: "IMG_8611", thumbnailUrl: nil, captureTimeUTC: Date(), exifData: ExifData(gpsDirection: 185), device: "iPhone 15 Pro", lens: "Main Camera", focalLengthMM: 24, aperture: 1.78, shutterSpeed: "1/160", iso: 125, presets: [], filters: [], headingFromExif: true, originalFilename: "IMG_8611.HEIC", createdAt: Date()),
+    Media(id: UUID(), spotId: nil, userId: UUID(), type: .photo, url: "IMG_8612", thumbnailUrl: nil, captureTimeUTC: Date(), exifData: ExifData(gpsDirection: 220), device: "iPhone 15 Pro", lens: "Main Camera", focalLengthMM: 24, aperture: 1.78, shutterSpeed: "1/100", iso: 200, presets: [], filters: [], headingFromExif: true, originalFilename: "IMG_8612.HEIC", createdAt: Date()),
+    Media(id: UUID(), spotId: nil, userId: UUID(), type: .photo, url: "IMG_8613", thumbnailUrl: nil, captureTimeUTC: Date(), exifData: ExifData(gpsDirection: 275), device: "iPhone 15 Pro", lens: "Main Camera", focalLengthMM: 24, aperture: 1.78, shutterSpeed: "1/80", iso: 250, presets: [], filters: [], headingFromExif: true, originalFilename: "IMG_8613.HEIC", createdAt: Date()),
+    Media(id: UUID(), spotId: nil, userId: UUID(), type: .photo, url: "IMG_8614", thumbnailUrl: nil, captureTimeUTC: Date(), exifData: ExifData(gpsDirection: 310), device: "iPhone 15 Pro", lens: "Main Camera", focalLengthMM: 24, aperture: 1.78, shutterSpeed: "1/320", iso: 64, presets: [], filters: [], headingFromExif: true, originalFilename: "IMG_8614.HEIC", createdAt: Date()),
+    Media(id: UUID(), spotId: nil, userId: UUID(), type: .photo, url: "IMG_8615", thumbnailUrl: nil, captureTimeUTC: Date(), exifData: ExifData(gpsDirection: 355), device: "iPhone 15 Pro", lens: "Main Camera", focalLengthMM: 24, aperture: 1.78, shutterSpeed: "1/400", iso: 50, presets: [], filters: [], headingFromExif: true, originalFilename: "IMG_8615.HEIC", createdAt: Date()),
+    Media(id: UUID(), spotId: nil, userId: UUID(), type: .photo, url: "IMG_8616", thumbnailUrl: nil, captureTimeUTC: Date(), exifData: ExifData(gpsDirection: 90), device: "iPhone 15 Pro", lens: "Main Camera", focalLengthMM: 24, aperture: 1.78, shutterSpeed: "1/125", iso: 100, presets: [], filters: [], headingFromExif: true, originalFilename: "IMG_8616.HEIC", createdAt: Date()),
+    Media(id: UUID(), spotId: nil, userId: UUID(), type: .photo, url: "IMG_8617", thumbnailUrl: nil, captureTimeUTC: Date(), exifData: ExifData(gpsDirection: 145), device: "iPhone 15 Pro", lens: "Main Camera", focalLengthMM: 24, aperture: 1.78, shutterSpeed: "1/200", iso: 64, presets: [], filters: [], headingFromExif: true, originalFilename: "IMG_8617.HEIC", createdAt: Date()),
+    // IMG_8618 - no heading data (simulating older photo)
+    Media(id: UUID(), spotId: nil, userId: UUID(), type: .photo, url: "IMG_8618", thumbnailUrl: nil, captureTimeUTC: Date(), exifData: ExifData(gpsDirection: nil), device: "iPhone 12", lens: "Main Camera", focalLengthMM: 26, aperture: 1.6, shutterSpeed: "1/60", iso: 320, presets: [], filters: [], headingFromExif: false, originalFilename: "IMG_8618.HEIC", createdAt: Date())
+]
+
 let mockSpots = [
     Spot(
         id: UUID(),
@@ -135,7 +151,8 @@ let mockSpots = [
         license: "CC-BY-NC",
         status: .active,
         createdAt: Date(),
-        updatedAt: Date()
+        updatedAt: Date(),
+        media: Array(mockMediaWithHeadings[0...5]) // First 6 photos
     ),
     Spot(
         id: UUID(),
@@ -150,7 +167,8 @@ let mockSpots = [
         license: "CC-BY-NC",
         status: .active,
         createdAt: Date(),
-        updatedAt: Date()
+        updatedAt: Date(),
+        media: Array(mockMediaWithHeadings[6...8]) // 3 more photos
     ),
     Spot(
         id: UUID(),
@@ -165,7 +183,8 @@ let mockSpots = [
         license: "CC-BY-NC",
         status: .active,
         createdAt: Date(),
-        updatedAt: Date()
+        updatedAt: Date(),
+        media: Array(mockMediaWithHeadings[9...10]) // Last 2 photos
     )
 ]
 

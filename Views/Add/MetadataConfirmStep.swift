@@ -63,7 +63,7 @@ struct MetadataConfirmStep: View {
                 }
             }
         }
-        .onChange(of: selectedTab) { newValue in
+        .onChange(of: selectedTab) { oldValue, newValue in
             // Focus the title field when switching to basic tab (0)
             if newValue == 0 && spotData.title.isEmpty {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
