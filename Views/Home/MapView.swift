@@ -4,13 +4,15 @@ import MapKit
 struct MapView: View {
     @EnvironmentObject var appState: AppState
     @Binding var selectedSpotId: UUID?
-    @State private var cameraPosition: MapCameraPosition = .region(MKCoordinateRegion(
-        center: CLLocationCoordinate2D(latitude: 37.7749, longitude: -122.4194),
-        span: MKCoordinateSpan(latitudeDelta: 0.1, longitudeDelta: 0.1)
-    ))
+    @State private var cameraPosition: MapCameraPosition = .region(
+        MKCoordinateRegion(
+            center: CLLocationCoordinate2D(latitude: 37.7749, longitude: -122.4194),
+            span: MKCoordinateSpan(latitudeDelta: 0.1, longitudeDelta: 0.1)
+        )
+    )
     
     var body: some View {
-        Map(position: $cameraPosition, selection: $selectedSpotId) {
+        Map(position: $cameraPosition, selection: $selectedSpotId, interactionModes: .all) {
             ForEach(mockSpots) { spot in
                 Annotation(spot.title, coordinate: spot.location) {
                     SpotMapPin(spot: spot, isSelected: selectedSpotId == spot.id)

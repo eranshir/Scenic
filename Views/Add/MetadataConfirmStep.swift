@@ -10,6 +10,7 @@ struct MetadataConfirmStep: View {
     
     @State private var selectedTab = 0
     @State private var isEditingLocation = false
+    @FocusState private var isTitleFieldFocused: Bool
     
     var body: some View {
         VStack(spacing: 0) {
@@ -54,6 +55,22 @@ struct MetadataConfirmStep: View {
             // Navigation buttons outside ScrollView but inside main VStack
             navigationButtons
         }
+        .onAppear {
+            // Focus the title field when the view appears
+            if spotData.title.isEmpty {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    isTitleFieldFocused = true
+                }
+            }
+        }
+        .onChange(of: selectedTab) { newValue in
+            // Focus the title field when switching to basic tab (0)
+            if newValue == 0 && spotData.title.isEmpty {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    isTitleFieldFocused = true
+                }
+            }
+        }
     }
     
     private var basicInfoSection: some View {
@@ -72,6 +89,7 @@ struct MetadataConfirmStep: View {
                 }
                 TextField("e.g., Golden Gate Bridge Sunset Point", text: $spotData.title)
                     .textFieldStyle(.roundedBorder)
+                    .focused($isTitleFieldFocused)
                     .overlay(
                         RoundedRectangle(cornerRadius: 6)
                             .stroke(spotData.title.isEmpty ? Color.orange : Color.clear, lineWidth: 2)
