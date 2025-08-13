@@ -15,12 +15,9 @@ struct MapView: View {
         Map(position: $cameraPosition, interactionModes: .all, selection: $selectedSpotId) {
             ForEach(mockSpots) { spot in
                 Annotation(spot.title, coordinate: spot.location) {
-                    SpotMapPin(spot: spot, isSelected: selectedSpotId == spot.id)
-                        .onTapGesture {
-                            withAnimation(.easeInOut(duration: 0.2)) {
-                                selectedSpotId = spot.id
-                            }
-                        }
+                    NavigationLink(destination: SpotDetailView(spot: spot)) {
+                        SpotMapPin(spot: spot, isSelected: selectedSpotId == spot.id)
+                    }
                 }
             }
             
@@ -31,14 +28,6 @@ struct MapView: View {
             MapUserLocationButton()
             MapCompass()
             MapScaleView()
-        }
-        .safeAreaInset(edge: .bottom) {
-            if let selectedId = selectedSpotId,
-               let spot = mockSpots.first(where: { $0.id == selectedId }) {
-                SpotPreviewCard(spot: spot)
-                    .padding()
-                    .transition(.move(edge: .bottom).combined(with: .opacity))
-            }
         }
     }
 }

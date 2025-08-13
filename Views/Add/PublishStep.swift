@@ -182,7 +182,7 @@ struct PublishStep: View {
                     Image(systemName: "location.fill")
                         .foregroundColor(.secondary)
                         .font(.caption)
-                    Text("(\(location.latitude, specifier: "%.4f"), \(location.longitude, specifier: "%.4f"))")
+                    Text(String(format: "(%.4f, %.4f)", location.latitude, location.longitude))
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
