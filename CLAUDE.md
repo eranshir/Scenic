@@ -102,3 +102,48 @@ Core events to track:
 - Contribution: `add_media_select`, `add_publish_success`
 - Engagement: `spot_upvote`, `comment_post`, `plan_add`
 - Retention: `journal_export`, `offline_dl`
+
+## Recent Development History
+
+### Enhanced Photo Carousel & Caching System (August 2025)
+**Commit**: `6c6518e` - "Feature: Enhanced photo carousel with comprehensive caching system"
+
+#### Major Implementation
+Implemented a complete overhaul of the photo management and display system:
+
+**Photo Carousel Improvements:**
+- Fixed photo loading and display issues in spot detail view
+- Implemented smooth horizontal scrolling carousel with wrap-around navigation
+- Added subtle visual hierarchy (5% size difference between center/side photos)
+- Enhanced animations with spring effects and center-lock behavior
+- Integrated compass rose overlays showing photo heading information
+- Professional timing analysis with sun position context
+
+**Unified Photo Caching System:**
+- `PhotoCacheService`: Local storage management with file existence checking
+- `PhotoLoader`: Unified loading from cached files with CDMedia integration  
+- `UnifiedPhotoView`: Consistent photo loading component across all views
+- Background sync capabilities for offline access
+- Cache management with UUID-based file naming
+
+**Core Data Integration:**
+- Complete Core Data model matching PostgreSQL schema
+- Entities: `CDSpot`, `CDMedia`, `CDSunSnapshot`, `CDWeatherSnapshot`, `CDAccessInfo`
+- Extensions for seamless conversion between Core Data and Swift models
+- `SpotDataService`: Data management layer with CRUD operations
+- `PersistenceController`: Shared Core Data stack management
+
+**Technical Solutions Implemented:**
+- Fixed SwiftUI ForEach ID conflicts in infinite carousel arrays
+- Resolved photo loading race conditions and cache misses
+- Implemented proper offset calculations for carousel positioning
+- Added comprehensive error handling and logging for debugging
+- Created fallback loading strategies for missing cache files
+
+**Files Created/Modified:**
+- Services: `PhotoCacheService`, `PhotoLoader`, `SpotDataService`, `PersistenceController`
+- Views: Enhanced `SpotDetailView` carousel, `UnifiedPhotoView`, `AsyncPhotoView`, `CachedPhotoView`
+- Models: Complete Core Data model with extensions
+- Integration: Journal view displays cached photos, spot list uses unified loading
+
+This implementation establishes the foundation for offline photo access, consistent UI across all views, and professional photo presentation with metadata context.
