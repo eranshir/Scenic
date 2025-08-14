@@ -192,82 +192,85 @@ struct SpotIdentificationStep: View {
     @State private var geocoder = CLGeocoder()
     
     var body: some View {
-        VStack(spacing: 0) {
-            ScrollView {
-                VStack(spacing: 20) {
-                    Text("Identify Spot")
-                        .font(.title2)
-                        .bold()
-                        .padding(.top)
-                    
-                    if let location = spotData.location {
-                        // Map showing location
-                        Map(initialPosition: .region(MKCoordinateRegion(
-                            center: location,
-                            span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
-                        ))) {
-                            Marker("Photo Location", coordinate: location)
-                                .tint(.green)
-                            
-                            // Show nearby spots
-                            ForEach(nearbySpots) { spot in
-                                Marker(spot.title, coordinate: spot.location)
-                                    .tint(.blue)
-                            }
-                        }
-                        .frame(height: 200)
-                        .cornerRadius(12)
-                        .padding(.horizontal)
+        GeometryReader { geometry in
+            VStack(spacing: 0) {
+                ScrollView {
+                    VStack(spacing: 20) {
+                        Text("Identify Spot")
+                            .font(.title2)
+                            .bold()
+                            .padding(.top)
                         
-                        if isReverseGeocoding {
-                            HStack {
-                                ProgressView()
-                                    .scaleEffect(0.8)
-                                Text("Finding location name...")
-                                    .font(.footnote)
-                                    .foregroundColor(.secondary)
+                        if let location = spotData.location {
+                            // Map showing location
+                            Map(initialPosition: .region(MKCoordinateRegion(
+                                center: location,
+                                span: MKCoordinateSpan(latitudeDelta: 0.001, longitudeDelta: 0.001)
+                            ))) {
+                                Marker("Photo Location", coordinate: location)
+                                    .tint(.green)
+                                
+                                // Show nearby spots
+                                ForEach(nearbySpots) { spot in
+                                    Marker(spot.title, coordinate: spot.location)
+                                        .tint(.blue)
+                                }
                             }
-                            .padding()
-                        } else if isLoadingNearbySpots {
-                            HStack {
-                                ProgressView()
-                                    .scaleEffect(0.8)
-                                Text("Checking for nearby spots...")
-                                    .font(.footnote)
-                                    .foregroundColor(.secondary)
-                            }
-                            .padding()
-                        } else {
-                            // Show results
-                            if nearbySpots.isEmpty {
-                                // New spot
-                                newSpotSection
+                            .frame(height: 200)
+                            .cornerRadius(12)
+                            .padding(.horizontal)
+                            
+                            if isReverseGeocoding {
+                                HStack {
+                                    ProgressView()
+                                        .scaleEffect(0.8)
+                                    Text("Finding location name...")
+                                        .font(.footnote)
+                                        .foregroundColor(.secondary)
+                                }
+                                .padding()
+                            } else if isLoadingNearbySpots {
+                                HStack {
+                                    ProgressView()
+                                        .scaleEffect(0.8)
+                                    Text("Checking for nearby spots...")
+                                        .font(.footnote)
+                                        .foregroundColor(.secondary)
+                                }
+                                .padding()
                             } else {
-                                // Existing spots nearby
-                                existingSpotsSection
+                                // Show results
+                                if nearbySpots.isEmpty {
+                                    // New spot
+                                    newSpotSection
+                                } else {
+                                    // Existing spots nearby
+                                    existingSpotsSection
+                                }
                             }
+                        } else {
+                            VStack(spacing: 12) {
+                                Image(systemName: "location.slash")
+                                    .font(.system(size: 50))
+                                    .foregroundColor(.orange)
+                                Text("No Location Data")
+                                    .font(.headline)
+                                Text("We couldn't extract GPS coordinates from your photos. You can still create a spot by manually setting the location.")
+                                    .font(.footnote)
+                                    .foregroundColor(.secondary)
+                                    .multilineTextAlignment(.center)
+                                    .padding(.horizontal)
+                            }
+                            .padding()
                         }
-                    } else {
-                        VStack(spacing: 12) {
-                            Image(systemName: "location.slash")
-                                .font(.system(size: 50))
-                                .foregroundColor(.orange)
-                            Text("No Location Data")
-                                .font(.headline)
-                            Text("We couldn't extract GPS coordinates from your photos. You can still create a spot by manually setting the location.")
-                                .font(.footnote)
-                                .foregroundColor(.secondary)
-                                .multilineTextAlignment(.center)
-                                .padding(.horizontal)
-                        }
-                        .padding()
-                    }
                     
-                    Spacer(minLength: 100)
+                        Spacer(minLength: 20)
+                    }
                 }
+                .frame(height: geometry.size.height - 100) // Leave space for navigation
+                
+                navigationButtons
             }
-            
-            navigationButtons
         }
         .onAppear {
             if let location = spotData.location {
@@ -451,6 +454,9 @@ struct SpotIdentificationStep: View {
                 .buttonStyle(PlainButtonStyle())
             }
             .padding(.horizontal)
+            
+            // Extra padding to ensure scrollability above navigation buttons
+            Spacer(minLength: 80)
         }
     }
     
@@ -630,6 +636,7 @@ struct SpotIdentificationStep: View {
                 )
             ]
             
+            // Filter test spots to find those within 100m of user location
             nearbySpots = testSpots.filter { spot in
                 let spotLocation = CLLocation(latitude: spot.location.latitude, longitude: spot.location.longitude)
                 return userLocation.distance(from: spotLocation) <= 100 // 100 meters
