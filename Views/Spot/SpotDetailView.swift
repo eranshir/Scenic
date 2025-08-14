@@ -2217,35 +2217,88 @@ struct ComprehensivePhotoDetailView: View {
             Text("Photographer Tips")
                 .font(.headline)
             
-            // Photographer tips based on current photo
-            VStack(alignment: .leading, spacing: 12) {
-                TipCard(
-                    icon: "sun.max",
-                    title: "Best Time to Shoot",
-                    content: "This photo was captured during golden hour. The warm, soft light enhances colors and creates beautiful shadows."
-                )
-                
-                TipCard(
-                    icon: "camera",
-                    title: "Equipment Used",
-                    content: "\(currentMedia?.device ?? "Camera") with \(currentMedia?.lens ?? "standard lens")"
-                )
-                
-                if let exif = currentMedia?.exifData, let focalLength = exif.focalLength {
-                    TipCard(
-                        icon: "viewfinder",
-                        title: "Composition",
-                        content: "Shot at \(Int(focalLength))mm focal length. This focal length is ideal for this type of scene."
-                    )
+            // Show user-submitted tips or empty state
+            if hasUserTips {
+                VStack(alignment: .leading, spacing: 12) {
+                    // Best time to shoot tip (if provided by user)
+                    if let bestTimeNotes = getUserBestTimeNotes() {
+                        TipCard(
+                            icon: "sun.max",
+                            title: "Best Time to Shoot",
+                            content: bestTimeNotes
+                        )
+                    }
+                    
+                    // Equipment tips (if provided by user)
+                    if let equipmentTips = getUserEquipmentTips() {
+                        TipCard(
+                            icon: "camera",
+                            title: "Recommended Equipment",
+                            content: equipmentTips
+                        )
+                    }
+                    
+                    // Composition tips (if provided by user)
+                    if let compositionTips = getUserCompositionTips() {
+                        TipCard(
+                            icon: "viewfinder",
+                            title: "Composition Tips",
+                            content: compositionTips
+                        )
+                    }
+                    
+                    // Seasonal notes (if provided by user)
+                    if let seasonalNotes = getUserSeasonalNotes() {
+                        TipCard(
+                            icon: "leaf",
+                            title: "Seasonal Notes",
+                            content: seasonalNotes
+                        )
+                    }
                 }
-                
-                TipCard(
-                    icon: "info.circle",
-                    title: "Pro Tip",
-                    content: "Study the light, shadows, and composition of this shot. Pay attention to the camera settings used to achieve this look."
-                )
+            } else {
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("No tips available")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                    
+                    Text("The photographer hasn't shared any tips for this photo yet.")
+                        .font(.footnote)
+                        .foregroundColor(.secondary)
+                        .padding()
+                        .background(Color(.systemGray6))
+                        .cornerRadius(8)
+                }
             }
         }
+    }
+    
+    // Helper methods for user-submitted tips (placeholder - would come from spot data)
+    private var hasUserTips: Bool {
+        return getUserBestTimeNotes() != nil || 
+               getUserEquipmentTips() != nil || 
+               getUserCompositionTips() != nil || 
+               getUserSeasonalNotes() != nil
+    }
+    
+    private func getUserBestTimeNotes() -> String? {
+        // TODO: Get from spot data - spot.bestTimeNotes
+        return nil
+    }
+    
+    private func getUserEquipmentTips() -> String? {
+        // TODO: Get from spot data - spot.equipmentTips
+        return nil
+    }
+    
+    private func getUserCompositionTips() -> String? {
+        // TODO: Get from spot data - spot.compositionTips
+        return nil
+    }
+    
+    private func getUserSeasonalNotes() -> String? {
+        // TODO: Get from spot data - spot.seasonalNotes
+        return nil
     }
 }
 
@@ -2261,19 +2314,15 @@ struct PhotoMetadataCard: View {
             
             VStack(spacing: 8) {
                 if let captureDate = media.captureTimeUTC ?? media.exifData?.dateTimeOriginal {
-                    MetadataRow(label: "Captured", value: captureDate.formatted(date: .abbreviated, time: .shortened))
-                }
-                
-                if let filename = media.originalFilename {
-                    MetadataRow(label: "Filename", value: filename)
+                    CopyableMetadataRow(label: "Captured", value: captureDate.formatted(date: .abbreviated, time: .shortened))
                 }
                 
                 if let width = media.exifData?.width, let height = media.exifData?.height {
-                    MetadataRow(label: "Resolution", value: "\(width) × \(height)")
+                    CopyableMetadataRow(label: "Resolution", value: "\(width) × \(height)")
                 }
                 
                 if let device = media.device {
-                    MetadataRow(label: "Device", value: device)
+                    CopyableMetadataRow(label: "Device", value: device)
                 }
             }
             .padding()
@@ -2286,6 +2335,8 @@ struct PhotoMetadataCard: View {
 struct TimingAnalysisCard: View {
     let captureDate: Date
     let location: CLLocationCoordinate2D
+    
+    @State private var sunSnapshot: SunSnapshot?
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -2320,55 +2371,179 @@ struct TimingAnalysisCard: View {
                 
                 Divider()
                 
-                // Mock sun timing (simplified for this implementation)
-                HStack {
-                    VStack(alignment: .leading) {
-                        HStack {
-                            Image(systemName: "sunrise.fill")
-                                .foregroundColor(.orange)
-                            Text("Sunrise")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
+                if let snapshot = sunSnapshot {
+                    // Sun times
+                    HStack {
+                        if let sunrise = snapshot.sunriseUTC {
+                            VStack(alignment: .leading) {
+                                HStack {
+                                    Image(systemName: "sunrise.fill")
+                                        .foregroundColor(.orange)
+                                    Text("Sunrise")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                                Text(sunrise, style: .time)
+                                    .font(.caption)
+                                    .fontWeight(.medium)
+                            }
                         }
-                        Text("6:30 AM")
-                            .font(.caption)
-                            .fontWeight(.medium)
+                        
+                        Spacer()
+                        
+                        if let sunset = snapshot.sunsetUTC {
+                            VStack(alignment: .trailing) {
+                                HStack {
+                                    Text("Sunset")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                    Image(systemName: "sunset.fill")
+                                        .foregroundColor(.orange)
+                                }
+                                Text(sunset, style: .time)
+                                    .font(.caption)
+                                    .fontWeight(.medium)
+                            }
+                        }
                     }
                     
-                    Spacer()
-                    
-                    VStack(alignment: .trailing) {
-                        HStack {
-                            Text("Sunset")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                            Image(systemName: "sunset.fill")
-                                .foregroundColor(.orange)
+                    // Relative timing and special periods
+                    VStack(alignment: .leading, spacing: 4) {
+                        // Golden/Blue hour indicator
+                        if isGoldenHour(captureDate: captureDate, snapshot: snapshot) {
+                            HStack {
+                                Image(systemName: "sun.max.fill")
+                                    .foregroundColor(.orange)
+                                    .font(.caption)
+                                Text("Golden Hour")
+                                    .font(.caption)
+                                    .fontWeight(.medium)
+                                    .foregroundColor(.orange)
+                                Spacer()
+                            }
+                        } else if isBlueHour(captureDate: captureDate, snapshot: snapshot) {
+                            HStack {
+                                Image(systemName: "moon.fill")
+                                    .foregroundColor(.blue)
+                                    .font(.caption)
+                                Text("Blue Hour")
+                                    .font(.caption)
+                                    .fontWeight(.medium)
+                                    .foregroundColor(.blue)
+                                Spacer()
+                            }
                         }
-                        Text("6:45 PM")
+                        
+                        // Relative timing to closest sun event
+                        if let relativeText = getRelativeTimingText(snapshot: snapshot) {
+                            HStack {
+                                Image(systemName: "clock.arrow.circlepath")
+                                    .foregroundColor(.blue)
+                                    .font(.caption)
+                                Text(relativeText)
+                                    .font(.caption)
+                                    .fontWeight(.medium)
+                                    .foregroundColor(.primary)
+                                Spacer()
+                            }
+                        }
+                    }
+                } else {
+                    // Loading state
+                    HStack {
+                        ProgressView()
+                            .scaleEffect(0.7)
+                        Text("Calculating sun times...")
                             .font(.caption)
-                            .fontWeight(.medium)
+                            .foregroundColor(.secondary)
                     }
-                }
-                
-                // Timing context
-                HStack {
-                    VStack(alignment: .leading) {
-                        HStack {
-                            Image(systemName: "sun.max.fill")
-                                .foregroundColor(.orange)
-                            Text("Golden Hour")
-                                .font(.caption)
-                                .fontWeight(.medium)
-                                .foregroundColor(.orange)
-                        }
-                    }
-                    Spacer()
                 }
             }
             .padding()
             .background(Color(.systemGray6))
             .cornerRadius(10)
+        }
+        .onAppear {
+            calculateSunTimes()
+        }
+    }
+    
+    private func calculateSunTimes() {
+        // Mock sun calculations - in a real app, this would use the NOAA Solar Position Algorithm
+        let calendar = Calendar.current
+        
+        // Mock sunrise/sunset times (simplified calculation - would vary by location in real app)
+        let sunrise = calendar.date(bySettingHour: 6, minute: 30, second: 0, of: captureDate) ?? captureDate
+        let sunset = calendar.date(bySettingHour: 18, minute: 45, second: 0, of: captureDate) ?? captureDate
+        let goldenHourStart = calendar.date(byAdding: .minute, value: -60, to: sunset) ?? sunset
+        let goldenHourEnd = calendar.date(byAdding: .minute, value: 30, to: sunset) ?? sunset
+        let blueHourStart = sunset
+        let blueHourEnd = calendar.date(byAdding: .minute, value: 45, to: sunset) ?? sunset
+        
+        // Find closest solar event
+        let events: [(SunSnapshot.SolarEvent, Date)] = [
+            (.sunrise, sunrise),
+            (.sunset, sunset),
+            (.goldenHourStart, goldenHourStart),
+            (.goldenHourEnd, goldenHourEnd),
+            (.blueHourStart, blueHourStart),
+            (.blueHourEnd, blueHourEnd)
+        ]
+        
+        let closestEvent = events.min { abs($0.1.timeIntervalSince(captureDate)) < abs($1.1.timeIntervalSince(captureDate)) }
+        let relativeMinutes = closestEvent.map { Int(captureDate.timeIntervalSince($0.1) / 60) }
+        
+        sunSnapshot = SunSnapshot(
+            id: UUID(),
+            spotId: UUID(),
+            date: captureDate,
+            sunriseUTC: sunrise,
+            sunsetUTC: sunset,
+            goldenHourStartUTC: goldenHourStart,
+            goldenHourEndUTC: goldenHourEnd,
+            blueHourStartUTC: blueHourStart,
+            blueHourEndUTC: blueHourEnd,
+            closestEvent: closestEvent?.0,
+            relativeMinutesToEvent: relativeMinutes
+        )
+    }
+    
+    private func isGoldenHour(captureDate: Date, snapshot: SunSnapshot) -> Bool {
+        guard let start = snapshot.goldenHourStartUTC,
+              let end = snapshot.goldenHourEndUTC else { return false }
+        return captureDate >= start && captureDate <= end
+    }
+    
+    private func isBlueHour(captureDate: Date, snapshot: SunSnapshot) -> Bool {
+        guard let start = snapshot.blueHourStartUTC,
+              let end = snapshot.blueHourEndUTC else { return false }
+        return captureDate >= start && captureDate <= end
+    }
+    
+    private func getRelativeTimingText(snapshot: SunSnapshot) -> String? {
+        // Find closest between sunrise and sunset only
+        guard let sunrise = snapshot.sunriseUTC,
+              let sunset = snapshot.sunsetUTC else { return nil }
+        
+        let timeToSunrise = abs(captureDate.timeIntervalSince(sunrise))
+        let timeToSunset = abs(captureDate.timeIntervalSince(sunset))
+        
+        if timeToSunrise < timeToSunset {
+            // Closer to sunrise
+            let minutes = Int(captureDate.timeIntervalSince(sunrise) / 60)
+            if minutes >= 0 {
+                return "\(minutes) minutes after sunrise"
+            } else {
+                return "\(abs(minutes)) minutes before sunrise"
+            }
+        } else {
+            // Closer to sunset
+            let minutes = Int(captureDate.timeIntervalSince(sunset) / 60)
+            if minutes >= 0 {
+                return "\(minutes) minutes after sunset"
+            } else {
+                return "\(abs(minutes)) minutes before sunset"
+            }
         }
     }
 }
@@ -2378,23 +2553,25 @@ struct LocationCard: View {
     let longitude: Double
     let heading: Float?
     
+    @State private var showingNavigationOptions = false
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Location")
                 .font(.headline)
             
             VStack(spacing: 8) {
-                MetadataRow(label: "Coordinates", value: String(format: "%.6f, %.6f", latitude, longitude))
+                CopyableMetadataRow(label: "Coordinates", value: String(format: "%.6f, %.6f", latitude, longitude))
                 
                 if let heading = heading {
-                    MetadataRow(label: "Camera Direction", value: "\(Int(heading))°")
+                    CopyableMetadataRow(label: "Camera Direction", value: "\(Int(heading))°")
                 }
             }
             .padding()
             .background(Color(.systemGray6))
             .cornerRadius(10)
             
-            // Mini map preview
+            // Mini map preview with navigation
             Map(initialPosition: .region(MKCoordinateRegion(
                 center: CLLocationCoordinate2D(latitude: latitude, longitude: longitude),
                 span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
@@ -2404,6 +2581,55 @@ struct LocationCard: View {
             }
             .frame(height: 150)
             .cornerRadius(10)
+            .onTapGesture {
+                showingNavigationOptions = true
+            }
+            .confirmationDialog("Navigate to Location", isPresented: $showingNavigationOptions, titleVisibility: .visible) {
+                Button("Apple Maps") {
+                    openInAppleMaps()
+                }
+                Button("Google Maps") {
+                    openInGoogleMaps()
+                }
+                Button("Waze") {
+                    openInWaze()
+                }
+            } message: {
+                Text("Choose your preferred navigation app")
+            }
+        }
+    }
+    
+    private func openInAppleMaps() {
+        let location = CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
+        let mapItem = MKMapItem(placemark: MKPlacemark(coordinate: location))
+        mapItem.name = "Photo Location"
+        mapItem.openInMaps(launchOptions: [MKLaunchOptionsDirectionsModeKey: MKLaunchOptionsDirectionsModeDriving])
+    }
+    
+    private func openInGoogleMaps() {
+        let urlString = "comgooglemaps://?daddr=\(latitude),\(longitude)&directionsmode=driving"
+        if let url = URL(string: urlString), UIApplication.shared.canOpenURL(url) {
+            UIApplication.shared.open(url)
+        } else {
+            // Fallback to web
+            let webUrlString = "https://maps.google.com/maps?daddr=\(latitude),\(longitude)"
+            if let webUrl = URL(string: webUrlString) {
+                UIApplication.shared.open(webUrl)
+            }
+        }
+    }
+    
+    private func openInWaze() {
+        let urlString = "waze://?ll=\(latitude),\(longitude)&navigate=yes"
+        if let url = URL(string: urlString), UIApplication.shared.canOpenURL(url) {
+            UIApplication.shared.open(url)
+        } else {
+            // Fallback to web
+            let webUrlString = "https://waze.com/ul?ll=\(latitude),\(longitude)&navigate=yes"
+            if let webUrl = URL(string: webUrlString) {
+                UIApplication.shared.open(webUrl)
+            }
         }
     }
 }
@@ -2418,19 +2644,19 @@ struct CameraInfoCard: View {
             
             VStack(spacing: 8) {
                 if let make = media.exifData?.make {
-                    MetadataRow(label: "Make", value: make)
+                    CopyableMetadataRow(label: "Make", value: make)
                 }
                 
                 if let model = media.exifData?.model {
-                    MetadataRow(label: "Model", value: model)
+                    CopyableMetadataRow(label: "Model", value: model)
                 }
                 
                 if let lens = media.lens ?? media.exifData?.lens {
-                    MetadataRow(label: "Lens", value: lens)
+                    CopyableMetadataRow(label: "Lens", value: lens)
                 }
                 
                 if let software = media.exifData?.software {
-                    MetadataRow(label: "Software", value: software)
+                    CopyableMetadataRow(label: "Software", value: software)
                 }
             }
             .padding()
@@ -2450,23 +2676,23 @@ struct CameraSettingsCard: View {
             
             VStack(spacing: 8) {
                 if let focalLength = exifData.focalLength {
-                    MetadataRow(label: "Focal Length", value: "\(Int(focalLength))mm")
+                    CopyableMetadataRow(label: "Focal Length", value: "\(Int(focalLength))mm")
                 }
                 
                 if let aperture = exifData.fNumber {
-                    MetadataRow(label: "Aperture", value: "f/\(aperture)")
+                    CopyableMetadataRow(label: "Aperture", value: "f/\(aperture)")
                 }
                 
                 if let exposureTime = exifData.exposureTime {
-                    MetadataRow(label: "Shutter Speed", value: exposureTime)
+                    CopyableMetadataRow(label: "Shutter Speed", value: exposureTime)
                 }
                 
                 if let iso = exifData.iso {
-                    MetadataRow(label: "ISO", value: String(iso))
+                    CopyableMetadataRow(label: "ISO", value: String(iso))
                 }
                 
                 if let colorSpace = exifData.colorSpace {
-                    MetadataRow(label: "Color Space", value: colorSpace)
+                    CopyableMetadataRow(label: "Color Space", value: colorSpace)
                 }
             }
             .padding()
@@ -2518,6 +2744,27 @@ struct MetadataRow: View {
             Text(value)
                 .font(.footnote)
                 .fontWeight(.medium)
+            
+            Spacer()
+        }
+    }
+}
+
+struct CopyableMetadataRow: View {
+    let label: String
+    let value: String
+    
+    var body: some View {
+        HStack {
+            Text(label)
+                .font(.footnote)
+                .foregroundColor(.secondary)
+                .frame(width: 100, alignment: .leading)
+            
+            Text(value)
+                .font(.footnote)
+                .fontWeight(.medium)
+                .textSelection(.enabled)
             
             Spacer()
         }
