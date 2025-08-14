@@ -3,14 +3,17 @@ import PhotosUI
 import Photos
 import CoreLocation
 import MapKit
+import CoreData
 
 struct AddSpotView: View {
     @EnvironmentObject var appState: AppState
+    @EnvironmentObject var spotDataService: SpotDataService
     @State private var selectedMedia: [PhotosPickerItem] = []
     @State private var extractedMetadata: [ExtractedPhotoMetadata] = []
     @State private var currentStep = AddSpotStep.selectMedia
     @State private var spotData = NewSpotData()
     @StateObject private var metadataExtractor = PhotoMetadataExtractor()
+    @State private var showingSuccessMessage = false
     
     enum AddSpotStep {
         case selectMedia
@@ -73,7 +76,9 @@ struct AddSpotView: View {
                         PublishStep(
                             spotData: $spotData,
                             onPublish: {
-                                // Handle publish
+                                Task {
+                                    await saveSpotToDatabase()
+                                }
                             },
                             onBack: {
                                 currentStep = .addRoute
@@ -88,6 +93,30 @@ struct AddSpotView: View {
             .safeAreaInset(edge: .bottom) {
                 Color.clear.frame(height: 0)
             }
+            .overlay(
+                // Success message overlay
+                Group {
+                    if showingSuccessMessage {
+                        VStack {
+                            Image(systemName: "checkmark.circle.fill")
+                                .font(.system(size: 50))
+                                .foregroundColor(.green)
+                            Text("Spot Saved Successfully!")
+                                .font(.title2)
+                                .fontWeight(.semibold)
+                            Text("Your spot has been saved to your local collection")
+                                .font(.footnote)
+                                .foregroundColor(.secondary)
+                                .multilineTextAlignment(.center)
+                        }
+                        .padding()
+                        .background(.ultraThinMaterial)
+                        .cornerRadius(16)
+                        .transition(.scale.combined(with: .opacity))
+                    }
+                }
+                .animation(.easeInOut(duration: 0.3), value: showingSuccessMessage)
+            )
         }
     }
     
@@ -134,6 +163,224 @@ struct AddSpotView: View {
             }
         }
     }
+    
+    private func saveSpotToDatabase() async {
+        if spotData.isNewSpot {
+            // Create new spot
+            await createNewSpot()
+        } else if let existingSpot = spotData.selectedExistingSpot {
+            // Add photos to existing spot
+            await addPhotosToExistingSpot(existingSpot)
+        }
+        
+        // Show success and reset form
+        showingSuccessMessage = true
+        resetForm()
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+            showingSuccessMessage = false
+            // Navigate back to map or show the created spot
+            // appState.selectedTab = .home // TODO: Handle navigation
+        }
+    }
+    
+    private func createNewSpot() async {
+        // Convert NewSpotData to Spot model
+        let spot = Spot(
+            id: UUID(),
+            title: spotData.title.isEmpty ? "Untitled Spot" : spotData.title,
+            location: spotData.location ?? CLLocationCoordinate2D(latitude: 0, longitude: 0),
+            headingDegrees: spotData.heading,
+            elevationMeters: spotData.elevation,
+            subjectTags: spotData.tags,
+            difficulty: spotData.difficulty,
+            createdBy: UUID(), // TODO: Replace with actual user ID
+            privacy: .publicSpot,
+            license: "CC-BY-NC", // Default license
+            status: .active,
+            createdAt: Date(),
+            updatedAt: Date(),
+            media: createMediaFromExtractedData(),
+            sunSnapshot: nil, // TODO: Add sun snapshot if available
+            weatherSnapshot: nil, // TODO: Add weather snapshot if available
+            accessInfo: createAccessInfo(),
+            comments: [],
+            voteCount: 0
+        )
+        
+        // Save to database first to create CDMedia entities
+        spotDataService.saveSpot(spot)
+        
+        // Cache the selected photos using the new cache system
+        await cacheSelectedPhotos(spot: spot)
+        
+        print("✅ Created new spot: \(spot.title)")
+    }
+    
+    private func addPhotosToExistingSpot(_ existingSpot: Spot) async {
+        // Create updated spot with additional media
+        let additionalMedia = createMediaFromExtractedData()
+        let updatedSpot = Spot(
+            id: existingSpot.id, // Keep existing ID
+            title: existingSpot.title,
+            location: existingSpot.location,
+            headingDegrees: existingSpot.headingDegrees,
+            elevationMeters: existingSpot.elevationMeters,
+            subjectTags: existingSpot.subjectTags,
+            difficulty: existingSpot.difficulty,
+            createdBy: existingSpot.createdBy,
+            privacy: existingSpot.privacy,
+            license: existingSpot.license,
+            status: existingSpot.status,
+            createdAt: existingSpot.createdAt,
+            updatedAt: Date(), // Update timestamp
+            media: existingSpot.media + additionalMedia, // Append new media
+            sunSnapshot: existingSpot.sunSnapshot,
+            weatherSnapshot: existingSpot.weatherSnapshot,
+            accessInfo: existingSpot.accessInfo,
+            comments: existingSpot.comments,
+            voteCount: existingSpot.voteCount
+        )
+        
+        // Save updated spot to database
+        spotDataService.saveSpot(updatedSpot)
+        
+        // Cache the new photos
+        await cacheSelectedPhotos(spot: updatedSpot)
+        
+        print("✅ Added \(additionalMedia.count) photos to existing spot: \(existingSpot.title)")
+    }
+    
+    private func createMediaFromExtractedData() -> [Media] {
+        return extractedMetadata.enumerated().map { index, metadata in
+            // Generate a unique identifier for local storage
+            let mediaId = UUID()
+            let photoIdentifier = "local_\(mediaId.uuidString)"
+            print("💾 Creating media with local identifier: \(photoIdentifier)")
+            
+            return Media(
+                id: mediaId,
+                spotId: nil, // Will be set by the relationship
+                userId: UUID(), // TODO: Replace with actual user ID
+                type: .photo, // Assuming photos for now
+                url: photoIdentifier, // Store our local identifier
+                thumbnailUrl: nil,
+                captureTimeUTC: metadata.captureDate,
+                exifData: ExifData(
+                    make: metadata.cameraMake,
+                    model: metadata.cameraModel,
+                    lens: metadata.lensModel,
+                    focalLength: metadata.focalLength,
+                    fNumber: metadata.aperture,
+                    exposureTime: metadata.shutterSpeed,
+                    iso: metadata.iso,
+                    dateTimeOriginal: metadata.captureDate,
+                    gpsLatitude: metadata.location?.latitude,
+                    gpsLongitude: metadata.location?.longitude,
+                    gpsAltitude: metadata.altitude,
+                    gpsDirection: metadata.heading.map { Float($0) },
+                    width: metadata.width,
+                    height: metadata.height,
+                    colorSpace: metadata.colorSpace,
+                    software: metadata.software
+                ),
+                device: [metadata.cameraMake, metadata.cameraModel].compactMap { $0 }.joined(separator: " "),
+                lens: metadata.lensModel,
+                focalLengthMM: metadata.focalLength,
+                aperture: metadata.aperture,
+                shutterSpeed: metadata.shutterSpeed,
+                iso: metadata.iso,
+                resolutionWidth: metadata.width,
+                resolutionHeight: metadata.height,
+                presets: [],
+                filters: [],
+                headingFromExif: metadata.heading != nil,
+                originalFilename: selectedMedia[safe: index]?.itemIdentifier ?? "Photo.HEIC",
+                createdAt: Date()
+            )
+        }
+    }
+    
+    private func createAccessInfo() -> AccessInfo? {
+        guard spotData.parkingLocation != nil || 
+              spotData.routePolyline != nil ||
+              !spotData.hazards.isEmpty ||
+              !spotData.fees.isEmpty else {
+            return nil
+        }
+        
+        return AccessInfo(
+            id: UUID(),
+            spotId: UUID(), // Will be set by the relationship
+            parkingLocation: spotData.parkingLocation,
+            routePolyline: spotData.routePolyline,
+            routeDistanceMeters: nil,
+            routeElevationGainMeters: nil,
+            routeDifficulty: nil,
+            hazards: spotData.hazards,
+            fees: spotData.fees,
+            notes: nil,
+            estimatedHikingTimeMinutes: nil
+        )
+    }
+    
+    private func resetForm() {
+        selectedMedia = []
+        extractedMetadata = []
+        currentStep = .selectMedia
+        spotData = NewSpotData()
+    }
+    
+    // MARK: - Photo Caching
+    
+    private func cacheSelectedPhotos(spot: Spot) async {
+        print("📁 Starting photo caching for \(selectedMedia.count) photos")
+        
+        let photoLoader = PhotoLoader.shared
+        let context = PersistenceController.shared.container.viewContext
+        
+        let fetchRequest: NSFetchRequest<CDSpot> = CDSpot.fetchRequest()
+        fetchRequest.predicate = NSPredicate(format: "id == %@", spot.id as CVarArg)
+        
+        do {
+            let cdSpots = try context.fetch(fetchRequest)
+            guard let cdSpot = cdSpots.first else {
+                print("❌ Could not find CDSpot for ID: \(spot.id)")
+                return
+            }
+            
+            let cdMediaItems = (cdSpot.media?.allObjects as? [CDMedia]) ?? []
+            print("📸 Found \(cdMediaItems.count) CDMedia items to cache")
+            
+            for (index, mediaItem) in selectedMedia.enumerated() {
+                if index < cdMediaItems.count {
+                    let cdMedia = cdMediaItems[index]
+                    print("💾 Caching photo \(index + 1)/\(selectedMedia.count)")
+                    
+                    let success = await photoLoader.cacheFromPhotosPicker(item: mediaItem, cdMedia: cdMedia)
+                    
+                    if success {
+                        print("✅ Successfully cached photo \(index + 1)")
+                    } else {
+                        print("❌ Failed to cache photo \(index + 1)")
+                    }
+                }
+            }
+            
+            try context.save()
+            print("💿 Saved cache information to Core Data")
+            
+        } catch {
+            print("❌ Error caching photos: \(error)")
+        }
+    }
+}
+
+// Safe array access extension
+extension Array {
+    subscript(safe index: Int) -> Element? {
+        return indices.contains(index) ? self[index] : nil
+    }
 }
 
 struct NewSpotData {
@@ -177,6 +424,7 @@ struct NewSpotData {
     var equipmentTips: String = ""
     var compositionTips: String = ""
     var seasonalNotes: String = ""
+    
 }
 
 struct SpotIdentificationStep: View {
@@ -190,6 +438,7 @@ struct SpotIdentificationStep: View {
     @State private var nearbySpots: [Spot] = []
     @State private var isLoadingNearbySpots = true
     @State private var geocoder = CLGeocoder()
+    @EnvironmentObject var spotDataService: SpotDataService
     
     var body: some View {
         GeometryReader { geometry in
@@ -533,115 +782,20 @@ struct SpotIdentificationStep: View {
     }
     
     private func findNearbySpots(near location: CLLocationCoordinate2D) {
-        // Simulate API call to find nearby spots
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-            // For demo purposes, check if location is within 100m of existing spots
-            let userLocation = CLLocation(latitude: location.latitude, longitude: location.longitude)
-            
-            // Create mock spots in various locations for testing
-            let testSpots = [
-                // Golden Gate area
-                Spot(
-                    id: UUID(),
-                    title: "Golden Gate Vista Point",
-                    location: CLLocationCoordinate2D(latitude: 37.8025, longitude: -122.4058),
-                    headingDegrees: 180,
-                    elevationMeters: 100,
-                    subjectTags: ["Bridge", "Sunset"],
-                    difficulty: .easy,
-                    createdBy: UUID(),
-                    privacy: .publicSpot,
-                    license: "CC-BY-NC",
-                    status: .active,
-                    createdAt: Date(),
-                    updatedAt: Date()
-                ),
-                Spot(
-                    id: UUID(),
-                    title: "Battery Spencer Overlook",
-                    location: CLLocationCoordinate2D(latitude: 37.8028, longitude: -122.4055),
-                    headingDegrees: 200,
-                    elevationMeters: 120,
-                    subjectTags: ["Bridge", "Architecture"],
-                    difficulty: .moderate,
-                    createdBy: UUID(),
-                    privacy: .publicSpot,
-                    license: "CC-BY-NC",
-                    status: .active,
-                    createdAt: Date(),
-                    updatedAt: Date()
-                ),
-                // New York Central Park area
-                Spot(
-                    id: UUID(),
-                    title: "Bethesda Fountain",
-                    location: CLLocationCoordinate2D(latitude: 40.7764, longitude: -73.9719),
-                    headingDegrees: 90,
-                    elevationMeters: 50,
-                    subjectTags: ["Fountain", "Park"],
-                    difficulty: .easy,
-                    createdBy: UUID(),
-                    privacy: .publicSpot,
-                    license: "CC-BY-NC",
-                    status: .active,
-                    createdAt: Date(),
-                    updatedAt: Date()
-                ),
-                Spot(
-                    id: UUID(),
-                    title: "Bow Bridge View",
-                    location: CLLocationCoordinate2D(latitude: 40.7766, longitude: -73.9717),
-                    headingDegrees: 45,
-                    elevationMeters: 52,
-                    subjectTags: ["Bridge", "Lake"],
-                    difficulty: .easy,
-                    createdBy: UUID(),
-                    privacy: .publicSpot,
-                    license: "CC-BY-NC",
-                    status: .active,
-                    createdAt: Date(),
-                    updatedAt: Date()
-                ),
-                // London area
-                Spot(
-                    id: UUID(),
-                    title: "Tower Bridge South Bank",
-                    location: CLLocationCoordinate2D(latitude: 51.5045, longitude: -0.0781),
-                    headingDegrees: 315,
-                    elevationMeters: 10,
-                    subjectTags: ["Bridge", "Thames"],
-                    difficulty: .easy,
-                    createdBy: UUID(),
-                    privacy: .publicSpot,
-                    license: "CC-BY-NC",
-                    status: .active,
-                    createdAt: Date(),
-                    updatedAt: Date()
-                ),
-                // Tokyo area
-                Spot(
-                    id: UUID(),
-                    title: "Shibuya Crossing",
-                    location: CLLocationCoordinate2D(latitude: 35.6598, longitude: 139.7006),
-                    headingDegrees: 135,
-                    elevationMeters: 30,
-                    subjectTags: ["Urban", "Street"],
-                    difficulty: .easy,
-                    createdBy: UUID(),
-                    privacy: .publicSpot,
-                    license: "CC-BY-NC",
-                    status: .active,
-                    createdAt: Date(),
-                    updatedAt: Date()
-                )
-            ]
-            
-            // Filter test spots to find those within 100m of user location
-            nearbySpots = testSpots.filter { spot in
-                let spotLocation = CLLocation(latitude: spot.location.latitude, longitude: spot.location.longitude)
-                return userLocation.distance(from: spotLocation) <= 100 // 100 meters
-            }
-            
+        print("🔍 Searching for spots near location: \(location.latitude), \(location.longitude)")
+        
+        // Search for spots within 100m radius using the SpotDataService
+        let nearbyFiltered = spotDataService.filterSpots(
+            nearLocation: (
+                latitude: location.latitude,
+                longitude: location.longitude,
+                radiusKM: 0.1 // 100 meters = 0.1 km
+            )
+        )
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            print("🎯 Found \(nearbyFiltered.count) nearby spots")
+            nearbySpots = nearbyFiltered
             isLoadingNearbySpots = false
         }
     }

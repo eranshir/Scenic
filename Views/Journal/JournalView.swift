@@ -48,11 +48,30 @@ struct JournalView: View {
 }
 
 struct JournalTimelineView: View {
+    @EnvironmentObject var spotDataService: SpotDataService
+    
     var body: some View {
         ScrollView {
             LazyVStack(spacing: 20) {
-                ForEach(mockJournalEntries) { entry in
-                    JournalEntryCard(entry: entry)
+                let userSpots = spotDataService.getUserSpots()
+                if userSpots.isEmpty {
+                    VStack(spacing: 16) {
+                        Image(systemName: "journal")
+                            .font(.system(size: 50))
+                            .foregroundColor(.secondary)
+                        Text("No spots in your journal yet")
+                            .font(.headline)
+                            .foregroundColor(.secondary)
+                        Text("Start adding your photography spots to build your personal journal")
+                            .font(.footnote)
+                            .foregroundColor(.secondary)
+                            .multilineTextAlignment(.center)
+                    }
+                    .padding()
+                } else {
+                    ForEach(userSpots) { spot in
+                        JournalEntryCardFromSpot(spot: spot)
+                    }
                 }
             }
             .padding()
@@ -127,6 +146,135 @@ struct JournalEntryCard: View {
         .background(Color(.systemBackground))
         .cornerRadius(12)
         .shadow(color: .black.opacity(0.1), radius: 5, x: 0, y: 2)
+    }
+}
+
+struct JournalEntryCardFromSpot: View {
+    let spot: Spot
+    
+    private var firstMedia: Media? {
+        print("📊 Spot '\(spot.title)' has \(spot.media.count) media items")
+        if let first = spot.media.first {
+            print("📷 First media URL: \(first.url)")
+            return first
+        } else {
+            print("❌ No media found for spot '\(spot.title)'")
+            return nil
+        }
+    }
+    
+    private var cameraInfo: String? {
+        guard let media = firstMedia else { return nil }
+        if let device = media.device, !device.isEmpty {
+            return device
+        }
+        return [media.exifData?.make, media.exifData?.model].compactMap { $0 }.joined(separator: " ")
+    }
+    
+    var body: some View {
+        NavigationLink(destination: SpotDetailView(spot: spot)) {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack {
+                    VStack(alignment: .leading) {
+                        Text(spot.createdAt, style: .date)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        Text(spot.title)
+                            .font(.headline)
+                            .foregroundColor(.primary)
+                    }
+                    
+                    Spacer()
+                    
+                    if spot.privacy == .privateSpot {
+                        Image(systemName: "lock.fill")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                }
+                
+                // Photo preview or placeholder
+                ZStack {
+                    if let firstMedia = firstMedia {
+                        UnifiedPhotoView(
+                            photoIdentifier: firstMedia.url,
+                            targetSize: CGSize(width: 800, height: 600),
+                            contentMode: .fit
+                        )
+                        .frame(maxWidth: .infinity, idealHeight: 300)
+                        .clipped()
+                        .cornerRadius(10)
+                            .overlay(
+                                // Show heading overlay if available
+                                Group {
+                                    if let heading = firstMedia.exifData?.gpsDirection {
+                                        VStack {
+                                            Spacer()
+                                            HStack {
+                                                Text("\(Int(heading))°")
+                                                    .font(.title3.bold())
+                                                    .foregroundColor(.white)
+                                                    .padding(.horizontal, 8)
+                                                    .padding(.vertical, 4)
+                                                    .background(.ultraThinMaterial)
+                                                    .cornerRadius(6)
+                                                Spacer()
+                                            }
+                                        }
+                                        .padding(12)
+                                    }
+                                }
+                            )
+                    } else {
+                        Rectangle()
+                            .fill(LinearGradient(
+                                colors: [Color.gray.opacity(0.3), Color.secondary.opacity(0.3)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            ))
+                            .frame(height: 200)
+                            .cornerRadius(10)
+                            .overlay(
+                                VStack {
+                                    Image(systemName: "photo")
+                                        .font(.system(size: 40))
+                                        .foregroundColor(.white.opacity(0.5))
+                                    Text("No photos")
+                                        .font(.caption)
+                                        .foregroundColor(.white.opacity(0.7))
+                                }
+                            )
+                    }
+                }
+                
+                HStack(spacing: 16) {
+                    Label("\(spot.media.count) photos", systemImage: "photo")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    
+                    if let camera = cameraInfo {
+                        Label(camera, systemImage: "camera")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    
+                    Label(spot.difficulty.displayName, systemImage: "figure.hiking")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    
+                    Spacer()
+                    
+                    Image(systemName: "chevron.right")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            }
+            .padding()
+            .background(Color(.systemBackground))
+            .cornerRadius(12)
+            .shadow(color: .black.opacity(0.1), radius: 5, x: 0, y: 2)
+        }
+        .buttonStyle(PlainButtonStyle())
     }
 }
 
@@ -262,26 +410,9 @@ struct JournalEntry: Identifiable {
     let isPrivate: Bool
 }
 
-let mockJournalEntries = [
-    JournalEntry(
-        date: Date().addingTimeInterval(-86400),
-        spotName: "Golden Gate Vista",
-        location: CLLocationCoordinate2D(latitude: 37.8024, longitude: -122.4058),
-        photoCount: 24,
-        camera: "Canon EOS R5",
-        notes: "Perfect golden hour conditions. The fog rolled in just as expected.",
-        isPrivate: false
-    ),
-    JournalEntry(
-        date: Date().addingTimeInterval(-86400 * 3),
-        spotName: "Baker Beach",
-        location: CLLocationCoordinate2D(latitude: 37.7936, longitude: -122.4836),
-        photoCount: 18,
-        camera: "iPhone 15 Pro",
-        notes: "Quick sunset shoot. Great reflections on the wet sand.",
-        isPrivate: true
-    )
-]
+// Empty mock data - app will use real database entries
+let mockJournalEntries: [JournalEntry] = []
+
 
 #Preview {
     JournalView()

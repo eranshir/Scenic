@@ -2,9 +2,11 @@ import SwiftUI
 
 struct SettingsView: View {
     @Environment(\.dismiss) var dismiss
+    @EnvironmentObject var spotDataService: SpotDataService
     @AppStorage("useMetricUnits") private var useMetricUnits = true
     @AppStorage("downloadOverCellular") private var downloadOverCellular = false
     @AppStorage("autoBackup") private var autoBackup = true
+    @State private var showingClearConfirmation = false
     
     var body: some View {
         NavigationStack {
@@ -47,6 +49,26 @@ struct SettingsView: View {
                     
                     Button(action: {}) {
                         Label("Clear Cache", systemImage: "trash")
+                    }
+                    
+                    Button(action: { showingClearConfirmation = true }) {
+                        Label("Clear All Spots (Debug)", systemImage: "exclamationmark.triangle")
+                            .foregroundColor(.red)
+                    }
+                    
+                    Button(action: { spotDataService.cleanupPhotoIdentifiers() }) {
+                        Label("Fix Photo Identifiers", systemImage: "wrench.and.screwdriver")
+                            .foregroundColor(.blue)
+                    }
+                    
+                    Button(action: { PhotoCacheService.shared.listCachedFiles() }) {
+                        Label("List Cached Files (Debug)", systemImage: "list.clipboard")
+                            .foregroundColor(.orange)
+                    }
+                    
+                    Button(action: { spotDataService.verifyPhotoCacheConsistency() }) {
+                        Label("Verify Cache Consistency", systemImage: "checkmark.shield")
+                            .foregroundColor(.purple)
                     }
                     
                     HStack {
@@ -107,6 +129,14 @@ struct SettingsView: View {
                         dismiss()
                     }
                 }
+            }
+            .confirmationDialog("Clear All Spots", isPresented: $showingClearConfirmation) {
+                Button("Clear All Spots", role: .destructive) {
+                    spotDataService.clearAllSpots()
+                }
+                Button("Cancel", role: .cancel) { }
+            } message: {
+                Text("This will permanently delete all spots and cached photos. This cannot be undone.")
             }
         }
     }

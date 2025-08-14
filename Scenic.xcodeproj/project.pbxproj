@@ -40,6 +40,19 @@
 		052DA22A2E4BAA5000ABB719 /* WeatherWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 052DA1F12E4BAA5000ABB719 /* WeatherWidget.swift */; };
 		052DA22B2E4BAA5000ABB719 /* AccessInfoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 052DA1ED2E4BAA5000ABB719 /* AccessInfoView.swift */; };
 		052DA22F2E4BB3FF00ABB719 /* PhotoMetadataExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 052DA22E2E4BB3FF00ABB719 /* PhotoMetadataExtractor.swift */; };
+		052DA23A2E4E0CC900ABB719 /* PersistenceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 052DA2372E4E0CC900ABB719 /* PersistenceController.swift */; };
+		052DA23D2E4E0D7E00ABB719 /* ScenicDataModel.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 052DA23B2E4E0D7E00ABB719 /* ScenicDataModel.xcdatamodeld */; };
+		052DA24F2E4E193200ABB719 /* CDSunSnapshot+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 052DA24D2E4E193200ABB719 /* CDSunSnapshot+Extensions.swift */; };
+		052DA2512E4E193200ABB719 /* CDWeatherSnapshot+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 052DA24E2E4E193200ABB719 /* CDWeatherSnapshot+Extensions.swift */; };
+		052DA2522E4E193200ABB719 /* CDAccessInfo+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 052DA24A2E4E193200ABB719 /* CDAccessInfo+Extensions.swift */; };
+		052DA2532E4E193200ABB719 /* CDMedia+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 052DA24B2E4E193200ABB719 /* CDMedia+Extensions.swift */; };
+		052DA2552E4E194000ABB719 /* SpotDataService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 052DA2542E4E194000ABB719 /* SpotDataService.swift */; };
+		052DA2562E4E194100ABB719 /* PhotoLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 052DA2572E4E194100ABB719 /* PhotoLoader.swift */; };
+		052DA2582E4E194200ABB719 /* PhotoCacheService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 052DA2592E4E194200ABB719 /* PhotoCacheService.swift */; };
+		052DA25A2E4E194300ABB719 /* CDSpot+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 052DA25B2E4E194300ABB719 /* CDSpot+Extensions.swift */; };
+		054BB2F42E4E641200CA52C4 /* CachedPhotoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 054BB2F12E4E641200CA52C4 /* CachedPhotoView.swift */; };
+		054BB2F52E4E641200CA52C4 /* AsyncPhotoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 054BB2F02E4E641200CA52C4 /* AsyncPhotoView.swift */; };
+		054BB2F62E4E641200CA52C4 /* UnifiedPhotoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 054BB2F22E4E641200CA52C4 /* UnifiedPhotoView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -99,6 +112,19 @@
 		052DA2012E4BAA5000ABB719 /* AddToPlanView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddToPlanView.swift; sourceTree = "<group>"; };
 		052DA2022E4BAA5000ABB719 /* SpotDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpotDetailView.swift; sourceTree = "<group>"; };
 		052DA22E2E4BB3FF00ABB719 /* PhotoMetadataExtractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoMetadataExtractor.swift; sourceTree = "<group>"; };
+		052DA2372E4E0CC900ABB719 /* PersistenceController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceController.swift; sourceTree = "<group>"; };
+		052DA23C2E4E0D7E00ABB719 /* ScenicDataModel.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = ScenicDataModel.xcdatamodel; sourceTree = "<group>"; };
+		052DA24A2E4E193200ABB719 /* CDAccessInfo+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CDAccessInfo+Extensions.swift"; sourceTree = "<group>"; };
+		052DA24B2E4E193200ABB719 /* CDMedia+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CDMedia+Extensions.swift"; sourceTree = "<group>"; };
+		052DA24D2E4E193200ABB719 /* CDSunSnapshot+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CDSunSnapshot+Extensions.swift"; sourceTree = "<group>"; };
+		052DA24E2E4E193200ABB719 /* CDWeatherSnapshot+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CDWeatherSnapshot+Extensions.swift"; sourceTree = "<group>"; };
+		052DA2542E4E194000ABB719 /* SpotDataService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpotDataService.swift; sourceTree = "<group>"; };
+		052DA2572E4E194100ABB719 /* PhotoLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoLoader.swift; sourceTree = "<group>"; };
+		052DA2592E4E194200ABB719 /* PhotoCacheService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoCacheService.swift; sourceTree = "<group>"; };
+		052DA25B2E4E194300ABB719 /* CDSpot+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CDSpot+Extensions.swift"; sourceTree = "<group>"; };
+		054BB2F02E4E641200CA52C4 /* AsyncPhotoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncPhotoView.swift; sourceTree = "<group>"; };
+		054BB2F12E4E641200CA52C4 /* CachedPhotoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CachedPhotoView.swift; sourceTree = "<group>"; };
+		054BB2F22E4E641200CA52C4 /* UnifiedPhotoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnifiedPhotoView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -151,6 +177,12 @@
 		052DA1972E4B9F4600ABB719 = {
 			isa = PBXGroup;
 			children = (
+				052DA24A2E4E193200ABB719 /* CDAccessInfo+Extensions.swift */,
+				052DA24B2E4E193200ABB719 /* CDMedia+Extensions.swift */,
+				052DA25B2E4E194300ABB719 /* CDSpot+Extensions.swift */,
+				052DA24D2E4E193200ABB719 /* CDSunSnapshot+Extensions.swift */,
+				052DA24E2E4E193200ABB719 /* CDWeatherSnapshot+Extensions.swift */,
+				052DA23B2E4E0D7E00ABB719 /* ScenicDataModel.xcdatamodeld */,
 				052DA1CF2E4BAA5000ABB719 /* App */,
 				052DA1D82E4BAA5000ABB719 /* Models */,
 				052DA1D92E4BAA5000ABB719 /* Resources */,
@@ -219,7 +251,11 @@
 		052DA1E52E4BAA5000ABB719 /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				052DA2542E4E194000ABB719 /* SpotDataService.swift */,
+				052DA2372E4E0CC900ABB719 /* PersistenceController.swift */,
 				052DA22E2E4BB3FF00ABB719 /* PhotoMetadataExtractor.swift */,
+				052DA2572E4E194100ABB719 /* PhotoLoader.swift */,
+				052DA2592E4E194200ABB719 /* PhotoCacheService.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -311,6 +347,7 @@
 		052DA2042E4BAA5000ABB719 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				054BB2F32E4E641200CA52C4 /* Shared */,
 				052DA1EC2E4BAA5000ABB719 /* Add */,
 				052DA1F22E4BAA5000ABB719 /* Components */,
 				052DA1F72E4BAA5000ABB719 /* Home */,
@@ -325,6 +362,16 @@
 		052DA2052E4BAA5000ABB719 /* Products */ = {
 			isa = PBXGroup;
 			name = Products;
+			sourceTree = "<group>";
+		};
+		054BB2F32E4E641200CA52C4 /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				054BB2F02E4E641200CA52C4 /* AsyncPhotoView.swift */,
+				054BB2F12E4E641200CA52C4 /* CachedPhotoView.swift */,
+				054BB2F22E4E641200CA52C4 /* UnifiedPhotoView.swift */,
+			);
+			path = Shared;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -473,18 +520,30 @@
 			files = (
 				052DA2072E4BAA5000ABB719 /* Media.swift in Sources */,
 				052DA2082E4BAA5000ABB719 /* SpotDetailView.swift in Sources */,
+				052DA2552E4E194000ABB719 /* SpotDataService.swift in Sources */,
+				052DA2562E4E194100ABB719 /* PhotoLoader.swift in Sources */,
+				052DA2582E4E194200ABB719 /* PhotoCacheService.swift in Sources */,
+				054BB2F42E4E641200CA52C4 /* CachedPhotoView.swift in Sources */,
+				054BB2F52E4E641200CA52C4 /* AsyncPhotoView.swift in Sources */,
+				054BB2F62E4E641200CA52C4 /* UnifiedPhotoView.swift in Sources */,
 				052DA20A2E4BAA5000ABB719 /* CommentRow.swift in Sources */,
 				052DA20B2E4BAA5000ABB719 /* JournalView.swift in Sources */,
 				052DA20C2E4BAA5000ABB719 /* SunSnapshot.swift in Sources */,
 				052DA20D2E4BAA5000ABB719 /* ExifDataView.swift in Sources */,
 				052DA20E2E4BAA5000ABB719 /* AccessInfo.swift in Sources */,
 				052DA2102E4BAA5000ABB719 /* FilterView.swift in Sources */,
+				052DA23D2E4E0D7E00ABB719 /* ScenicDataModel.xcdatamodeld in Sources */,
 				052DA2112E4BAA5000ABB719 /* PlansView.swift in Sources */,
 				052DA2122E4BAA5000ABB719 /* ContentView.swift in Sources */,
 				052DA2132E4BAA5000ABB719 /* Spot.swift in Sources */,
 				052DA2142E4BAA5000ABB719 /* Plan.swift in Sources */,
 				052DA2152E4BAA5000ABB719 /* Comment.swift in Sources */,
 				052DA2162E4BAA5000ABB719 /* CreatePlanView.swift in Sources */,
+				052DA24F2E4E193200ABB719 /* CDSunSnapshot+Extensions.swift in Sources */,
+				052DA2512E4E193200ABB719 /* CDWeatherSnapshot+Extensions.swift in Sources */,
+				052DA2522E4E193200ABB719 /* CDAccessInfo+Extensions.swift in Sources */,
+				052DA2532E4E193200ABB719 /* CDMedia+Extensions.swift in Sources */,
+				052DA25A2E4E194300ABB719 /* CDSpot+Extensions.swift in Sources */,
 				052DA2182E4BAA5000ABB719 /* SettingsView.swift in Sources */,
 				052DA2192E4BAA5000ABB719 /* ProfileView.swift in Sources */,
 				052DA21A2E4BAA5000ABB719 /* AddSpotView.swift in Sources */,
@@ -502,6 +561,7 @@
 				052DA2272E4BAA5000ABB719 /* PublishStep.swift in Sources */,
 				052DA2282E4BAA5000ABB719 /* SunTimesWidget.swift in Sources */,
 				052DA2292E4BAA5000ABB719 /* AppState.swift in Sources */,
+				052DA23A2E4E0CC900ABB719 /* PersistenceController.swift in Sources */,
 				052DA22A2E4BAA5000ABB719 /* WeatherWidget.swift in Sources */,
 				052DA22B2E4BAA5000ABB719 /* AccessInfoView.swift in Sources */,
 			);
@@ -830,6 +890,19 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCVersionGroup section */
+		052DA23B2E4E0D7E00ABB719 /* ScenicDataModel.xcdatamodeld */ = {
+			isa = XCVersionGroup;
+			children = (
+				052DA23C2E4E0D7E00ABB719 /* ScenicDataModel.xcdatamodel */,
+			);
+			currentVersion = 052DA23C2E4E0D7E00ABB719 /* ScenicDataModel.xcdatamodel */;
+			path = ScenicDataModel.xcdatamodeld;
+			sourceTree = "<group>";
+			versionGroupType = wrapper.xcdatamodel;
+		};
+/* End XCVersionGroup section */
 	};
 	rootObject = 052DA1982E4B9F4600ABB719 /* Project object */;
 }

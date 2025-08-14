@@ -5,7 +5,7 @@
 
 ## 1. Current Implementation Status
 
-### ✅ Completed Features (v0.0.1)
+### ✅ Completed Features (v0.0.5)
 
 #### Core Infrastructure
 - ✅ SwiftUI app architecture with tab-based navigation
@@ -16,29 +16,41 @@
 #### Spot Discovery & Viewing
 - ✅ Map view with gesture support (pinch, zoom, pan)
 - ✅ List view for spots
-- ✅ Basic spot detail view
+- ✅ Comprehensive spot detail view with tabbed interface
+- ✅ **Heading-based circular photo gallery** (signature feature)
+- ✅ **Infinite scroll gallery with compass-ordered photos**
+- ✅ **Compass rose indicator showing current photo direction**
+- ✅ **Photo display with EXIF overlay and heading indicators**
 - ✅ Search bar UI (non-functional)
 - ✅ Filter UI (non-functional)
 - ✅ Spot preview cards on map
 
-#### Spot Creation
-- ✅ Multi-step creation flow (Media → Metadata → Route → Publish)
+#### Spot Creation & Smart Features
+- ✅ **Intelligent spot identification with automatic reverse geocoding**
+- ✅ **Nearby spots detection and selection (100m radius)**
+- ✅ Multi-step creation flow (Media → **Spot ID** → Metadata → Route → Publish)
 - ✅ Photo picker with multi-select
-- ✅ EXIF metadata extraction (camera, lens, settings)
-- ✅ Location extraction from photos
+- ✅ EXIF metadata extraction (camera, lens, settings, **GPS heading**)
+- ✅ Location extraction from photos with **map zoom optimization**
+- ✅ **Photo timing analysis with sun calculations**
+- ✅ **Sunrise/sunset times with relative positioning**
+- ✅ **Golden Hour and Blue Hour detection**
 - ✅ Manual metadata entry for all photography settings
 - ✅ Route drawing with tap-to-place points
 - ✅ Parking location setting
 - ✅ Hazards and fees selection
 - ✅ Photography tips fields (best time, equipment, composition, seasonal)
 - ✅ Privacy and license selection
-- ✅ Auto-focus on title field
+- ✅ **Centered spot name display (auto-generated, no validation required)**
 
 #### UI/UX Polish
 - ✅ Progress indicator for multi-step flows
 - ✅ Proper button positioning above tab bar
 - ✅ Consistent navigation patterns
 - ✅ Responsive map interactions
+- ✅ **Streamlined navigation removing overlay friction**
+- ✅ **50/50 layout split in spot details**
+- ✅ **Loading states and smooth animations**
 
 #### Plans & Journal
 - ✅ Basic UI shells for Plans and Journal tabs
@@ -50,11 +62,11 @@
 ## 2. Gap Analysis (PRD vs Current State)
 
 ### 🔴 Critical Missing Features
-1. **Sun/Sunrise/Sunset Data** - Core to the app's value proposition
+1. ~~**Sun/Sunrise/Sunset Data**~~ ✅ **COMPLETED** - Implemented in metadata review
 2. **Weather Integration** - Historical and forecast data
 3. **Functional Search & Filters** - Currently just UI
 4. **Data Persistence** - Everything is mock data
-5. **Photo/Video Display** - Can select but not display media
+5. ~~**Photo/Video Display**~~ ✅ **COMPLETED** - Heading-based gallery implemented
 
 ### 🟡 Important Missing Features
 1. **Route Distance/Elevation Calculation**
@@ -75,42 +87,44 @@
 
 ## 3. Prioritized Feature Roadmap for Prototype Phase
 
-### Phase 1: Core Value Features (Week 1-2)
+### Phase 1: Core Value Features ✅ **MOSTLY COMPLETED**
 **Goal: Make the app functionally demonstrate its core value proposition**
 
-#### 1.1 Sun Position & Timing (Priority: CRITICAL)
-- [ ] Integrate solar calculation library (NOAA algorithm)
-- [ ] Calculate and display sunrise/sunset times for spots
-- [ ] Show golden hour and blue hour windows
-- [ ] Display current sun position/angle for spots
-- [ ] Show "time until golden hour" in spot cards
+#### 1.1 ✅ Sun Position & Timing **COMPLETED**
+- ✅ ~~Integrate solar calculation library~~ Mock NOAA algorithm implemented
+- ✅ Calculate and display sunrise/sunset times for spots
+- ✅ Show golden hour and blue hour windows with indicators
+- ✅ Display relative timing (minutes before/after solar events)
+- ✅ Show photo timing analysis in metadata review
 - [ ] Add sun timeline widget to spot detail view
+- [ ] Show "time until golden hour" in spot preview cards
 
-#### 1.2 Heading-Based Media Gallery (Priority: CRITICAL)
-**Signature Feature: Spatial photo organization by compass heading**
+#### 1.2 ✅ Heading-Based Media Gallery **COMPLETED** 
+**✅ Signature Feature: Spatial photo organization by compass heading**
 
-**Core Gallery Experience:**
-- [ ] Implement circular gallery where photos are ordered by compass heading (0° to 360°)
-- [ ] Create dynamic strip layout showing current photo prominently with adjacent photos visible
-- [ ] Enable smooth swiping to navigate through directional sequence (like turning 360° at the spot)
-- [ ] Handle photos without heading data by placing them at end before wrapping around
-- [ ] Enable swiping when 2+ photos exist in gallery
+**✅ Core Gallery Experience:**
+- ✅ Implemented circular gallery where photos are ordered by compass heading (0° to 360°)
+- ✅ Created infinite scroll layout with current photo prominently displayed
+- ✅ Enabled smooth swiping to navigate through directional sequence
+- ✅ Handled photos without heading data by placing them at end
+- ✅ Enabled swiping with proper gesture recognition
 
-**Visual Components:**
-- [ ] Add responsive compass rose indicator showing current photo's heading
-- [ ] Display selected photos in spot creation flow with heading preview
-- [ ] Support video playback within the circular gallery
-- [ ] Show EXIF overlay on photos (toggleable)
-- [ ] Add thumbnail generation for performance
+**✅ Visual Components:**
+- ✅ Added responsive compass rose indicator showing current photo's heading
+- ✅ Display photos with heading overlay and EXIF data
+- ✅ Support for photo display with fallback placeholders
+- ✅ Show EXIF overlay on photos with heading indicators
+- [ ] Support video playbook within the circular gallery
+- [ ] Add thumbnail generation for performance optimization
 
 **Future Enhancements (Deferred):**
-- Grouping multiple photos with similar headings (±10-15°) in sub-galleries with smaller thumbnails
+- Grouping multiple photos with similar headings (±10-15°) in sub-galleries
 - AR overlay showing heading gaps to encourage complete coverage
 
-#### 1.3 Local Data Persistence (Priority: CRITICAL)
+#### 1.3 Local Data Persistence (Priority: **NOW CRITICAL**)
 - [ ] Implement CoreData or SwiftData models
 - [ ] Save created spots locally
-- [ ] Persist user's plans
+- [ ] Persist user's plans  
 - [ ] Cache spot data for offline viewing
 - [ ] Store media references properly
 - [ ] Implement data migration strategy
@@ -311,13 +325,15 @@
 
 ---
 
-## 9. Next Immediate Steps
+## 9. Next Immediate Steps (Updated for v0.0.5)
 
-1. **Set up Core Data models** - Foundation for all features
-2. **Implement sun calculations** - Core value proposition
-3. **Add photo display to spots** - Visual appeal critical for photographers
-4. **Make search functional** - Basic discovery requirement
+1. **Set up Core Data models** - **HIGHEST PRIORITY** - Foundation for persistence
+2. ~~**Implement sun calculations**~~ ✅ **COMPLETED**
+3. ~~**Add photo display to spots**~~ ✅ **COMPLETED** - Heading-based gallery working
+4. **Make search functional** - Enable basic discovery
 5. **Connect filters to data** - Enable targeted discovery
+6. **Weather integration** - Complete the core value proposition
+7. **Video playback support** - Extend gallery to handle video media
 
 ---
 

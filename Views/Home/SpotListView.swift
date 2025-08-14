@@ -39,12 +39,13 @@ struct SpotPhotoBackground: View {
     
     var body: some View {
         Group {
-            if let firstMedia = spot.media.first,
-               let uiImage = UIImage(named: firstMedia.url) {
-                // Use actual photo if available
-                Image(uiImage: uiImage)
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
+            if let firstMedia = spot.media.first {
+                // Use cached photo system
+                UnifiedPhotoView(
+                    photoIdentifier: firstMedia.url,
+                    targetSize: CGSize(width: 300, height: 200),
+                    contentMode: .fill
+                )
             } else {
                 // Fallback gradient with spot-specific colors
                 LinearGradient(

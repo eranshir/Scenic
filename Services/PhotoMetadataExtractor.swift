@@ -12,6 +12,9 @@ struct ExtractedPhotoMetadata {
     var heading: Double?
     var captureDate: Date?
     
+    // PHAsset identifier for loading the actual image
+    var assetLocalIdentifier: String?
+    
     // Camera & Lens
     var cameraMake: String?
     var cameraModel: String?
@@ -68,18 +71,25 @@ class PhotoMetadataExtractor: ObservableObject {
         
         // Try to get the asset
         if let assetIdentifier = item.itemIdentifier {
+            print("🔍 PhotoMetadataExtractor: Trying to fetch asset with PhotosPickerItem identifier: \(assetIdentifier)")
             let fetchResult = PHAsset.fetchAssets(withLocalIdentifiers: [assetIdentifier], options: nil)
+            print("🔍 PhotoMetadataExtractor: Fetch result count: \(fetchResult.count)")
+            
             if let asset = fetchResult.firstObject {
+                // Store the actual PHAsset local identifier
+                metadata.assetLocalIdentifier = asset.localIdentifier
+                print("✅ PhotoMetadataExtractor: Found asset with local identifier: \(asset.localIdentifier)")
+                
                 // Extract basic metadata from PHAsset
                 metadata.location = asset.location?.coordinate
                 metadata.altitude = asset.location?.altitude
                 metadata.heading = asset.location?.course
-                metadata.captureDate = asset.creationDate
+                metadata.captureDate = asset.creationDate // Fallback date
                 metadata.duration = asset.duration
                 
                 // Get detailed EXIF data
                 let exifData = await extractDetailedEXIF(from: asset)
-                // Merge the EXIF data into our metadata
+                // Merge the EXIF data into our metadata, prioritizing EXIF data
                 metadata.aperture = exifData.aperture ?? metadata.aperture
                 metadata.shutterSpeed = exifData.shutterSpeed ?? metadata.shutterSpeed
                 metadata.iso = exifData.iso ?? metadata.iso
@@ -98,6 +108,18 @@ class PhotoMetadataExtractor: ObservableObject {
                 metadata.height = exifData.height ?? metadata.height
                 metadata.colorSpace = exifData.colorSpace ?? metadata.colorSpace
                 metadata.bitDepth = exifData.bitDepth ?? metadata.bitDepth
+                
+                // Prioritize EXIF capture date over asset creation date
+                metadata.captureDate = exifData.captureDate ?? metadata.captureDate
+                
+                // For iPhones, generate lens info if missing
+                if metadata.lensModel == nil && metadata.cameraModel != nil {
+                    metadata.lensModel = generateiPhoneLensName(cameraModel: metadata.cameraModel, focalLength: metadata.focalLength)
+                }
+            } else {
+                print("❌ PhotoMetadataExtractor: Could not find asset with PhotosPickerItem identifier: \(assetIdentifier)")
+                // Still use the PhotosPickerItem identifier as fallback
+                metadata.assetLocalIdentifier = assetIdentifier
             }
         }
         
@@ -137,6 +159,11 @@ class PhotoMetadataExtractor: ObservableObject {
                         metadata.meteringMode = self.parseMeteringMode(exif[kCGImagePropertyExifMeteringMode as String])
                         metadata.exposureMode = self.parseExposureMode(exif[kCGImagePropertyExifExposureMode as String])
                         metadata.exposureBias = exif[kCGImagePropertyExifExposureBiasValue as String] as? Float
+                        
+                        // Extract capture date from EXIF DateTimeOriginal
+                        if let dateTimeOriginal = exif[kCGImagePropertyExifDateTimeOriginal as String] as? String {
+                            metadata.captureDate = self.parseEXIFDate(dateTimeOriginal)
+                        }
                     }
                     
                     // TIFF Dictionary
@@ -149,6 +176,22 @@ class PhotoMetadataExtractor: ObservableObject {
                     // Lens info from EXIF Aux
                     if let exifAux = properties["{ExifAux}"] as? [String: Any] {
                         metadata.lensModel = exifAux["LensModel"] as? String
+                        // Also try iPhone-specific lens fields
+                        if metadata.lensModel == nil {
+                            metadata.lensModel = exifAux["LensSpecification"] as? String
+                        }
+                    }
+                    
+                    // For iPhones, try additional fields if standard ones are empty
+                    if metadata.cameraMake == nil || metadata.cameraModel == nil {
+                        // Try from TIFF ImageDescription field
+                        if let tiff = properties[kCGImagePropertyTIFFDictionary as String] as? [String: Any],
+                           let imageDesc = tiff[kCGImagePropertyTIFFImageDescription as String] as? String {
+                            // iPhones sometimes store camera info in image description
+                            if metadata.cameraMake == nil && imageDesc.contains("Apple") {
+                                metadata.cameraMake = "Apple"
+                            }
+                        }
                     }
                     
                     // Image dimensions
@@ -167,6 +210,92 @@ class PhotoMetadataExtractor: ObservableObject {
         guard let imageSource = CGImageSourceCreateWithData(data as CFData, nil),
               let properties = CGImageSourceCopyPropertiesAtIndex(imageSource, 0, nil) as? [String: Any] else {
             return
+        }
+        
+        // EXIF Dictionary
+        if let exif = properties[kCGImagePropertyExifDictionary as String] as? [String: Any] {
+            if let dateTimeOriginal = exif[kCGImagePropertyExifDateTimeOriginal as String] as? String {
+                metadata.captureDate = parseEXIFDate(dateTimeOriginal)
+            }
+            
+            // Extract camera settings if not already present
+            if metadata.aperture == nil {
+                metadata.aperture = exif[kCGImagePropertyExifFNumber as String] as? Float
+            }
+            if metadata.shutterSpeed == nil {
+                metadata.shutterSpeed = formatShutterSpeed(exif[kCGImagePropertyExifExposureTime as String])
+            }
+            if metadata.iso == nil {
+                metadata.iso = (exif[kCGImagePropertyExifISOSpeedRatings as String] as? [Int])?.first
+            }
+            if metadata.focalLength == nil {
+                metadata.focalLength = exif[kCGImagePropertyExifFocalLength as String] as? Float
+            }
+            if metadata.focalLengthIn35mm == nil {
+                metadata.focalLengthIn35mm = exif[kCGImagePropertyExifFocalLenIn35mmFilm as String] as? Float
+            }
+            if metadata.flash == nil {
+                metadata.flash = (exif[kCGImagePropertyExifFlash as String] as? Int) ?? 0 > 0
+            }
+            if metadata.whiteBalance == nil {
+                metadata.whiteBalance = parseWhiteBalance(exif[kCGImagePropertyExifWhiteBalance as String])
+            }
+            if metadata.meteringMode == nil {
+                metadata.meteringMode = parseMeteringMode(exif[kCGImagePropertyExifMeteringMode as String])
+            }
+            if metadata.exposureMode == nil {
+                metadata.exposureMode = parseExposureMode(exif[kCGImagePropertyExifExposureMode as String])
+            }
+            if metadata.exposureBias == nil {
+                metadata.exposureBias = exif[kCGImagePropertyExifExposureBiasValue as String] as? Float
+            }
+        }
+        
+        // TIFF Dictionary for camera information
+        if let tiff = properties[kCGImagePropertyTIFFDictionary as String] as? [String: Any] {
+            if metadata.cameraMake == nil {
+                metadata.cameraMake = tiff[kCGImagePropertyTIFFMake as String] as? String
+            }
+            if metadata.cameraModel == nil {
+                metadata.cameraModel = tiff[kCGImagePropertyTIFFModel as String] as? String
+            }
+            if metadata.software == nil {
+                metadata.software = tiff[kCGImagePropertyTIFFSoftware as String] as? String
+            }
+        }
+        
+        // Lens info from EXIF Aux
+        if let exifAux = properties["{ExifAux}"] as? [String: Any] {
+            if metadata.lensModel == nil {
+                metadata.lensModel = exifAux["LensModel"] as? String
+                // Also try iPhone-specific lens fields
+                if metadata.lensModel == nil {
+                    metadata.lensModel = exifAux["LensSpecification"] as? String
+                }
+            }
+        }
+        
+        // For iPhones, generate lens info if missing
+        if metadata.lensModel == nil && metadata.cameraModel != nil {
+            // Get focal length from EXIF if not already extracted
+            if let exif = properties[kCGImagePropertyExifDictionary as String] as? [String: Any] {
+                let focalLength = exif[kCGImagePropertyExifFocalLength as String] as? Float
+                metadata.lensModel = generateiPhoneLensName(cameraModel: metadata.cameraModel, focalLength: focalLength)
+            }
+        }
+        
+        // Image dimensions
+        if metadata.width == nil {
+            metadata.width = properties[kCGImagePropertyPixelWidth as String] as? Int
+        }
+        if metadata.height == nil {
+            metadata.height = properties[kCGImagePropertyPixelHeight as String] as? Int
+        }
+        if metadata.colorSpace == nil {
+            metadata.colorSpace = properties[kCGImagePropertyColorModel as String] as? String
+        }
+        if metadata.bitDepth == nil {
+            metadata.bitDepth = properties[kCGImagePropertyDepth as String] as? Int
         }
         
         // GPS Dictionary
@@ -227,5 +356,42 @@ class PhotoMetadataExtractor: ObservableObject {
         case 2: return "Auto bracket"
         default: return "Unknown"
         }
+    }
+    
+    private func parseEXIFDate(_ dateString: String) -> Date? {
+        // EXIF date format is "YYYY:MM:DD HH:MM:SS"
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy:MM:dd HH:mm:ss"
+        formatter.timeZone = TimeZone.current // Use local timezone
+        return formatter.date(from: dateString)
+    }
+    
+    private func generateiPhoneLensName(cameraModel: String?, focalLength: Float?) -> String? {
+        guard let model = cameraModel, model.contains("iPhone") else { return nil }
+        
+        // Extract iPhone model
+        if let focal = focalLength {
+            let focalMM = Int(focal.rounded())
+            
+            // iPhone lens mapping based on focal length
+            switch focalMM {
+            case 13...15:
+                return "iPhone Ultra Wide (13mm f/2.4)"
+            case 23...26:
+                return "iPhone Main Camera (24mm f/1.6-1.8)"
+            case 28...30:
+                return "iPhone Wide (28mm f/1.8)"
+            case 52...57:
+                return "iPhone Telephoto (2x)"
+            case 65...85:
+                return "iPhone Telephoto (3x)"
+            case 120...130:
+                return "iPhone Telephoto (5x)"
+            default:
+                return "iPhone Camera (\(focalMM)mm)"
+            }
+        }
+        
+        return "iPhone Camera"
     }
 }

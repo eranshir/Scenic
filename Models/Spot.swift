@@ -39,6 +39,16 @@ struct Spot: Identifiable, Codable {
             case .veryHard: return "Very Hard"
             }
         }
+        
+        var icon: String {
+            switch self {
+            case .veryEasy: return "figure.walk"
+            case .easy: return "figure.walk"
+            case .moderate: return "figure.hiking"
+            case .hard: return "figure.climbing"
+            case .veryHard: return "figure.climbing"
+            }
+        }
     }
     
     enum Privacy: String, Codable {

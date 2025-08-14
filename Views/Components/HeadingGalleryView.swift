@@ -92,20 +92,13 @@ struct MediaItemView: View {
     
     var body: some View {
         ZStack {
-            // Photo placeholder/actual image
-            RoundedRectangle(cornerRadius: 16)
-                .fill(Color.gray.opacity(0.3))
-                .overlay(
-                    // For now, show image name as placeholder
-                    VStack {
-                        Image(systemName: "photo")
-                            .font(.system(size: 40))
-                            .foregroundColor(.gray)
-                        Text(media.url)
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                )
+            // Actual photo using UnifiedPhotoView
+            UnifiedPhotoView(
+                photoIdentifier: media.url,
+                targetSize: CGSize(width: 300, height: 225),
+                contentMode: .fill
+            )
+            .clipShape(RoundedRectangle(cornerRadius: 16))
             
             // Heading indicator overlay
             if let heading = media.exifData?.gpsDirection {
