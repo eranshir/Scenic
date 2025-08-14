@@ -76,24 +76,12 @@ struct MetadataConfirmStep: View {
     private var basicInfoSection: some View {
         VStack(alignment: .leading, spacing: 16) {
             // Title
-            VStack(alignment: .leading) {
-                HStack {
-                    Text("Spot Title")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                    Text("*")
-                        .foregroundColor(.red)
-                    Text("(Required)")
-                        .font(.caption2)
-                        .foregroundColor(.orange)
-                }
+            VStack {
                 TextField("e.g., Golden Gate Bridge Sunset Point", text: $spotData.title)
+                    .font(.title3)
+                    .multilineTextAlignment(.center)
                     .textFieldStyle(.roundedBorder)
                     .focused($isTitleFieldFocused)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 6)
-                            .stroke(spotData.title.isEmpty ? Color.orange : Color.clear, lineWidth: 2)
-                    )
             }
             
             // Location
@@ -139,6 +127,108 @@ struct MetadataConfirmStep: View {
                 )
             }
             
+            // Capture Timing Information
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Photo Timing")
+                    .font(.headline)
+                    .foregroundColor(.primary)
+                
+                // Date and Time
+                HStack {
+                    VStack(alignment: .leading) {
+                        HStack {
+                            Image(systemName: "calendar")
+                                .foregroundColor(.blue)
+                            if let captureDate = spotData.captureDate {
+                                Text(captureDate, style: .date)
+                                    .fontWeight(.medium)
+                            } else {
+                                Text("N/A")
+                                    .fontWeight(.medium)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                        .font(.footnote)
+                    }
+                    
+                    Spacer()
+                    
+                    VStack(alignment: .trailing) {
+                        HStack {
+                            Image(systemName: "clock")
+                                .foregroundColor(.blue)
+                            if let captureDate = spotData.captureDate {
+                                Text(captureDate, style: .time)
+                                    .fontWeight(.medium)
+                            } else {
+                                Text("N/A")
+                                    .fontWeight(.medium)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                        .font(.footnote)
+                    }
+                }
+                
+                Divider()
+                
+                // Sun Timing Information
+                if let captureDate = spotData.captureDate, let location = spotData.location {
+                    PhotoTimingAnalysis(captureDate: captureDate, location: location)
+                } else {
+                    // Show placeholder when no timing data available
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                            VStack(alignment: .leading) {
+                                HStack {
+                                    Image(systemName: "sunrise.fill")
+                                        .foregroundColor(.orange)
+                                    Text("Sunrise")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                                Text("N/A")
+                                    .font(.caption)
+                                    .fontWeight(.medium)
+                                    .foregroundColor(.secondary)
+                            }
+                            
+                            Spacer()
+                            
+                            VStack(alignment: .trailing) {
+                                HStack {
+                                    Text("Sunset")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                    Image(systemName: "sunset.fill")
+                                        .foregroundColor(.orange)
+                                }
+                                Text("N/A")
+                                    .font(.caption)
+                                    .fontWeight(.medium)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                        
+                        HStack {
+                            VStack(alignment: .leading) {
+                                HStack {
+                                    Image(systemName: "clock.arrow.circlepath")
+                                        .foregroundColor(.blue)
+                                    Text("No timing data available from photo")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                            }
+                            Spacer()
+                        }
+                    }
+                }
+            }
+            .padding()
+            .background(Color(.systemGray6))
+            .cornerRadius(12)
+            
             // Heading and Elevation
             HStack(spacing: 16) {
                 VStack(alignment: .leading) {
@@ -166,27 +256,6 @@ struct MetadataConfirmStep: View {
                             .keyboardType(.numberPad)
                         Text("m")
                     }
-                }
-            }
-            
-            // Capture Time
-            if let captureDate = spotData.captureDate {
-                VStack(alignment: .leading) {
-                    Text("Capture Time")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                    
-                    HStack {
-                        Image(systemName: "calendar")
-                        Text(captureDate, style: .date)
-                        Spacer()
-                        Image(systemName: "clock")
-                        Text(captureDate, style: .time)
-                    }
-                    .font(.footnote)
-                    .padding(8)
-                    .background(Color(.systemGray6))
-                    .cornerRadius(8)
                 }
             }
             
@@ -436,35 +505,25 @@ struct MetadataConfirmStep: View {
     }
     
     private var navigationButtons: some View {
-        VStack(spacing: 8) {
-            if spotData.title.isEmpty {
-                Text("Please enter a spot title to continue")
-                    .font(.caption)
-                    .foregroundColor(.orange)
-                    .padding(.horizontal)
-            }
-            
-            HStack {
-                Button(action: onBack) {
-                    Text("Back")
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color(.systemGray5))
-                        .cornerRadius(10)
-                }
-                
-                Button(action: onNext) {
-                    HStack {
-                        Text("Continue")
-                        Image(systemName: "arrow.right")
-                    }
+        HStack {
+            Button(action: onBack) {
+                Text("Back")
                     .frame(maxWidth: .infinity)
                     .padding()
-                    .background(spotData.title.isEmpty ? Color.gray : Color.green)
-                    .foregroundColor(.white)
+                    .background(Color(.systemGray5))
                     .cornerRadius(10)
+            }
+            
+            Button(action: onNext) {
+                HStack {
+                    Text("Continue")
+                    Image(systemName: "arrow.right")
                 }
-                .disabled(spotData.title.isEmpty)
+                .frame(maxWidth: .infinity)
+                .padding()
+                .background(Color.green)
+                .foregroundColor(.white)
+                .cornerRadius(10)
             }
         }
         .padding()
@@ -530,5 +589,155 @@ struct TagSelector: View {
                 }
             }
         }
+    }
+}
+
+struct PhotoTimingAnalysis: View {
+    let captureDate: Date
+    let location: CLLocationCoordinate2D
+    
+    @State private var sunSnapshot: SunSnapshot?
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            if let snapshot = sunSnapshot {
+                // Sun times for the day
+                HStack {
+                    if let sunrise = snapshot.sunriseUTC {
+                        VStack(alignment: .leading) {
+                            HStack {
+                                Image(systemName: "sunrise.fill")
+                                    .foregroundColor(.orange)
+                                Text("Sunrise")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                            Text(sunrise, style: .time)
+                                .font(.caption)
+                                .fontWeight(.medium)
+                        }
+                    }
+                    
+                    Spacer()
+                    
+                    if let sunset = snapshot.sunsetUTC {
+                        VStack(alignment: .trailing) {
+                            HStack {
+                                Text("Sunset")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                Image(systemName: "sunset.fill")
+                                    .foregroundColor(.orange)
+                            }
+                            Text(sunset, style: .time)
+                                .font(.caption)
+                                .fontWeight(.medium)
+                        }
+                    }
+                }
+                
+                // Relative timing and special periods
+                HStack {
+                    VStack(alignment: .leading) {
+                        if let event = snapshot.closestEvent, let minutes = snapshot.relativeMinutesToEvent {
+                            HStack {
+                                Image(systemName: "clock.arrow.circlepath")
+                                    .foregroundColor(.blue)
+                                let timeDescription = minutes >= 0 ? "\(minutes) min after" : "\(abs(minutes)) min before"
+                                Text("\(timeDescription) \(event.displayName.lowercased())")
+                                    .font(.caption)
+                                    .foregroundColor(.primary)
+                            }
+                        }
+                        
+                        // Golden/Blue hour indicator
+                        if isGoldenHour(captureDate: captureDate, snapshot: snapshot) {
+                            HStack {
+                                Image(systemName: "sun.max.fill")
+                                    .foregroundColor(.orange)
+                                Text("Golden Hour")
+                                    .font(.caption)
+                                    .fontWeight(.medium)
+                                    .foregroundColor(.orange)
+                            }
+                        } else if isBlueHour(captureDate: captureDate, snapshot: snapshot) {
+                            HStack {
+                                Image(systemName: "moon.fill")
+                                    .foregroundColor(.blue)
+                                Text("Blue Hour")
+                                    .font(.caption)
+                                    .fontWeight(.medium)
+                                    .foregroundColor(.blue)
+                            }
+                        }
+                    }
+                    
+                    Spacer()
+                }
+            } else {
+                HStack {
+                    ProgressView()
+                        .scaleEffect(0.8)
+                    Text("Calculating sun times...")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            }
+        }
+        .onAppear {
+            calculateSunTimes()
+        }
+    }
+    
+    private func calculateSunTimes() {
+        // Mock sun calculations - in a real app, this would use the NOAA Solar Position Algorithm
+        let calendar = Calendar.current
+        
+        // Mock sunrise/sunset times (simplified calculation - would vary by location in real app)
+        let sunrise = calendar.date(bySettingHour: 6, minute: 30, second: 0, of: captureDate) ?? captureDate
+        let sunset = calendar.date(bySettingHour: 18, minute: 45, second: 0, of: captureDate) ?? captureDate
+        let goldenHourStart = calendar.date(byAdding: .minute, value: -60, to: sunset) ?? sunset
+        let goldenHourEnd = calendar.date(byAdding: .minute, value: 30, to: sunset) ?? sunset
+        let blueHourStart = sunset
+        let blueHourEnd = calendar.date(byAdding: .minute, value: 45, to: sunset) ?? sunset
+        
+        // Find closest solar event
+        let events: [(SunSnapshot.SolarEvent, Date)] = [
+            (.sunrise, sunrise),
+            (.sunset, sunset),
+            (.goldenHourStart, goldenHourStart),
+            (.goldenHourEnd, goldenHourEnd),
+            (.blueHourStart, blueHourStart),
+            (.blueHourEnd, blueHourEnd)
+        ]
+        
+        let closestEvent = events.min { abs($0.1.timeIntervalSince(captureDate)) < abs($1.1.timeIntervalSince(captureDate)) }
+        let relativeMinutes = closestEvent.map { Int(captureDate.timeIntervalSince($0.1) / 60) }
+        
+        sunSnapshot = SunSnapshot(
+            id: UUID(),
+            spotId: UUID(),
+            date: captureDate,
+            sunriseUTC: sunrise,
+            sunsetUTC: sunset,
+            goldenHourStartUTC: goldenHourStart,
+            goldenHourEndUTC: goldenHourEnd,
+            blueHourStartUTC: blueHourStart,
+            blueHourEndUTC: blueHourEnd,
+            closestEvent: closestEvent?.0,
+            relativeMinutesToEvent: relativeMinutes
+        )
+    }
+    
+    private func isGoldenHour(captureDate: Date, snapshot: SunSnapshot) -> Bool {
+        guard let start = snapshot.goldenHourStartUTC,
+              let end = snapshot.goldenHourEndUTC else { return false }
+        return captureDate >= start && captureDate <= end
+    }
+    
+    private func isBlueHour(captureDate: Date, snapshot: SunSnapshot) -> Bool {
+        guard let start = snapshot.blueHourStartUTC,
+              let end = snapshot.blueHourEndUTC else { return false }
+        return captureDate >= start && captureDate <= end
     }
 }
