@@ -508,6 +508,9 @@ struct EnhancedPhotoTimingAnalysis: View {
         .onAppear {
             calculateSunTimes()
         }
+        .onChange(of: captureDate) { _, _ in
+            calculateSunTimes()
+        }
     }
     
     private func calculateSunTimes() {
