@@ -643,7 +643,7 @@ struct PhotoTimingAnalysis: View {
                             HStack {
                                 Image(systemName: "clock.arrow.circlepath")
                                     .foregroundColor(.blue)
-                                let timeDescription = minutes >= 0 ? "\(minutes) min after" : "\(abs(minutes)) min before"
+                                let timeDescription = minutes >= 0 ? "\(formatTimeInterval(minutes)) after" : "\(formatTimeInterval(minutes)) before"
                                 Text("\(timeDescription) \(event.displayName.lowercased())")
                                     .font(.caption)
                                     .foregroundColor(.primary)
@@ -739,5 +739,19 @@ struct PhotoTimingAnalysis: View {
         guard let start = snapshot.blueHourStartUTC,
               let end = snapshot.blueHourEndUTC else { return false }
         return captureDate >= start && captureDate <= end
+    }
+    
+    private func formatTimeInterval(_ minutes: Int) -> String {
+        let absMinutes = abs(minutes)
+        let hours = absMinutes / 60
+        let remainingMinutes = absMinutes % 60
+        
+        if hours == 0 {
+            return "\(remainingMinutes) minute\(remainingMinutes == 1 ? "" : "s")"
+        } else if remainingMinutes == 0 {
+            return "\(hours) hour\(hours == 1 ? "" : "s")"
+        } else {
+            return "\(hours) hour\(hours == 1 ? "" : "s") and \(remainingMinutes) minute\(remainingMinutes == 1 ? "" : "s")"
+        }
     }
 }

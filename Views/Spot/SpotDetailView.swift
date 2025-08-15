@@ -471,7 +471,7 @@ struct EnhancedPhotoTimingAnalysis: View {
                             Image(systemName: "clock.arrow.circlepath")
                                 .foregroundColor(.secondary)
                                 .font(.caption2)
-                            let timeDescription = minutes >= 0 ? "\(minutes)m after" : "\(abs(minutes))m before"
+                            let timeDescription = minutes >= 0 ? "\(formatTimeInterval(minutes)) after" : "\(formatTimeInterval(minutes)) before"
                             Text("\(timeDescription) \(eventShortName(event))")
                                 .font(.caption2)
                                 .foregroundColor(.secondary)
@@ -575,6 +575,20 @@ struct EnhancedPhotoTimingAnalysis: View {
         case .blueHourEnd: return "blue hour"
         }
     }
+    
+    private func formatTimeInterval(_ minutes: Int) -> String {
+        let absMinutes = abs(minutes)
+        let hours = absMinutes / 60
+        let remainingMinutes = absMinutes % 60
+        
+        if hours == 0 {
+            return "\(remainingMinutes) minute\(remainingMinutes == 1 ? "" : "s")"
+        } else if remainingMinutes == 0 {
+            return "\(hours) hour\(hours == 1 ? "" : "s")"
+        } else {
+            return "\(hours) hour\(hours == 1 ? "" : "s") and \(remainingMinutes) minute\(remainingMinutes == 1 ? "" : "s")"
+        }
+    }
 }
 
 // MARK: - Compact Photo Timing Analysis
@@ -630,7 +644,7 @@ struct CompactPhotoTimingAnalysis: View {
                             Image(systemName: "clock.arrow.circlepath")
                                 .foregroundColor(.secondary)
                                 .font(.caption2)
-                            let timeDescription = minutes >= 0 ? "\(minutes)m after" : "\(abs(minutes))m before"
+                            let timeDescription = minutes >= 0 ? "\(formatTimeInterval(minutes)) after" : "\(formatTimeInterval(minutes)) before"
                             Text("\(timeDescription) \(eventShortName(event))")
                                 .font(.caption2)
                                 .foregroundColor(.secondary)
@@ -729,6 +743,20 @@ struct CompactPhotoTimingAnalysis: View {
         case .goldenHourEnd: return "golden hour"
         case .blueHourStart: return "blue hour"
         case .blueHourEnd: return "blue hour"
+        }
+    }
+    
+    private func formatTimeInterval(_ minutes: Int) -> String {
+        let absMinutes = abs(minutes)
+        let hours = absMinutes / 60
+        let remainingMinutes = absMinutes % 60
+        
+        if hours == 0 {
+            return "\(remainingMinutes) minute\(remainingMinutes == 1 ? "" : "s")"
+        } else if remainingMinutes == 0 {
+            return "\(hours) hour\(hours == 1 ? "" : "s")"
+        } else {
+            return "\(hours) hour\(hours == 1 ? "" : "s") and \(remainingMinutes) minute\(remainingMinutes == 1 ? "" : "s")"
         }
     }
 }
@@ -2564,18 +2592,32 @@ struct TimingAnalysisCard: View {
             // Closer to sunrise
             let minutes = Int(captureDate.timeIntervalSince(sunrise) / 60)
             if minutes >= 0 {
-                return "\(minutes) minutes after sunrise"
+                return "\(formatTimeInterval(minutes)) after sunrise"
             } else {
-                return "\(abs(minutes)) minutes before sunrise"
+                return "\(formatTimeInterval(minutes)) before sunrise"
             }
         } else {
             // Closer to sunset
             let minutes = Int(captureDate.timeIntervalSince(sunset) / 60)
             if minutes >= 0 {
-                return "\(minutes) minutes after sunset"
+                return "\(formatTimeInterval(minutes)) after sunset"
             } else {
-                return "\(abs(minutes)) minutes before sunset"
+                return "\(formatTimeInterval(minutes)) before sunset"
             }
+        }
+    }
+    
+    private func formatTimeInterval(_ minutes: Int) -> String {
+        let absMinutes = abs(minutes)
+        let hours = absMinutes / 60
+        let remainingMinutes = absMinutes % 60
+        
+        if hours == 0 {
+            return "\(remainingMinutes) minute\(remainingMinutes == 1 ? "" : "s")"
+        } else if remainingMinutes == 0 {
+            return "\(hours) hour\(hours == 1 ? "" : "s")"
+        } else {
+            return "\(hours) hour\(hours == 1 ? "" : "s") and \(remainingMinutes) minute\(remainingMinutes == 1 ? "" : "s")"
         }
     }
 }
