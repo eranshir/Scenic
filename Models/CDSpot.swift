@@ -27,6 +27,19 @@ extension CDSpot {
     @NSManaged public var updatedAt: Date
     @NSManaged public var subjectTagsString: String // JSON encoded array
     
+    // Location metadata from reverse geocoding
+    @NSManaged public var country: String?
+    @NSManaged public var countryCode: String?
+    @NSManaged public var administrativeArea: String?
+    @NSManaged public var subAdministrativeArea: String?
+    @NSManaged public var locality: String?
+    @NSManaged public var subLocality: String?
+    @NSManaged public var thoroughfare: String?
+    @NSManaged public var subThoroughfare: String?
+    @NSManaged public var postalCode: String?
+    @NSManaged public var locationName: String?
+    @NSManaged public var areasOfInterestString: String?
+    
     // Server Sync Properties
     @NSManaged public var serverSpotId: String? // nil if not published to server
     @NSManaged public var isPublished: Bool
@@ -91,6 +104,28 @@ extension CDSpot {
                 subjectTagsString = string
             } else {
                 subjectTagsString = "[]"
+            }
+        }
+    }
+    
+    var areasOfInterest: [String]? {
+        get {
+            guard let areasString = areasOfInterestString,
+                  !areasString.isEmpty,
+                  let data = areasString.data(using: .utf8),
+                  let areas = try? JSONDecoder().decode([String].self, from: data) else {
+                return nil
+            }
+            return areas.isEmpty ? nil : areas
+        }
+        set {
+            if let newValue = newValue,
+               !newValue.isEmpty,
+               let data = try? JSONEncoder().encode(newValue),
+               let string = String(data: data, encoding: .utf8) {
+                areasOfInterestString = string
+            } else {
+                areasOfInterestString = nil
             }
         }
     }
@@ -164,6 +199,16 @@ extension CDSpot {
 // MARK: - Conversion Methods
 extension CDSpot {
     func toSpot() -> Spot {
+        // Debug: Check CoreData location fields for Palo Alto
+        if title.contains("Palo Alto") {
+            print("🗺️ DEBUG: CDSpot.toSpot() - Raw CoreData values for '\(title)':")
+            print("  CDSpot.country: '\(country ?? "nil")'")
+            print("  CDSpot.countryCode: '\(countryCode ?? "nil")'")
+            print("  CDSpot.administrativeArea: '\(administrativeArea ?? "nil")'")
+            print("  CDSpot.locality: '\(locality ?? "nil")'")
+            print("  CDSpot.locationName: '\(locationName ?? "nil")'")
+        }
+        
         Spot(
             id: id,
             title: title,
@@ -178,6 +223,17 @@ extension CDSpot {
             status: statusEnum,
             createdAt: createdAt,
             updatedAt: updatedAt,
+            country: country,
+            countryCode: countryCode,
+            administrativeArea: administrativeArea,
+            subAdministrativeArea: subAdministrativeArea,
+            locality: locality,
+            subLocality: subLocality,
+            thoroughfare: thoroughfare,
+            subThoroughfare: subThoroughfare,
+            postalCode: postalCode,
+            locationName: locationName,
+            areasOfInterest: areasOfInterest,
             media: mediaArray.map { $0.toMedia() },
             sunSnapshot: sunSnapshot?.toSunSnapshot(),
             weatherSnapshot: weatherSnapshot?.toWeatherSnapshot(),
@@ -201,14 +257,28 @@ extension CDSpot {
         statusEnum = spot.status
         createdAt = spot.createdAt
         updatedAt = spot.updatedAt
+        
+        // Location metadata from reverse geocoding
+        country = spot.country
+        countryCode = spot.countryCode
+        administrativeArea = spot.administrativeArea
+        subAdministrativeArea = spot.subAdministrativeArea
+        locality = spot.locality
+        subLocality = spot.subLocality
+        thoroughfare = spot.thoroughfare
+        subThoroughfare = spot.subThoroughfare
+        postalCode = spot.postalCode
+        locationName = spot.locationName
+        areasOfInterest = spot.areasOfInterest
         voteCount = Int32(spot.voteCount)
+        
     }
     
     static func fromSpot(_ spot: Spot, in context: NSManagedObjectContext) -> CDSpot {
         let cdSpot = CDSpot(context: context)
         cdSpot.id = spot.id
         cdSpot.updateFromSpot(spot)
-        cdSpot.isLocalOnly = true // New spots are always local-only initially
+        cdSpot.isLocalOnly = true
         cdSpot.isPublished = false
         return cdSpot
     }

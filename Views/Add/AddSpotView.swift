@@ -5,6 +5,20 @@ import CoreLocation
 import MapKit
 import CoreData
 
+struct PlacemarkData {
+    let country: String?
+    let countryCode: String?
+    let administrativeArea: String?
+    let subAdministrativeArea: String?
+    let locality: String?
+    let subLocality: String?
+    let thoroughfare: String?
+    let subThoroughfare: String?
+    let postalCode: String?
+    let locationName: String?
+    let areasOfInterest: [String]?
+}
+
 struct AddSpotView: View {
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var spotDataService: SpotDataService
@@ -185,6 +199,7 @@ struct AddSpotView: View {
     }
     
     private func createNewSpot() async {
+        
         // Convert NewSpotData to Spot model
         let spot = Spot(
             id: UUID(),
@@ -200,6 +215,17 @@ struct AddSpotView: View {
             status: .active,
             createdAt: Date(),
             updatedAt: Date(),
+            country: spotData.placemarkData?.country,
+            countryCode: spotData.placemarkData?.countryCode,
+            administrativeArea: spotData.placemarkData?.administrativeArea,
+            subAdministrativeArea: spotData.placemarkData?.subAdministrativeArea,
+            locality: spotData.placemarkData?.locality,
+            subLocality: spotData.placemarkData?.subLocality,
+            thoroughfare: spotData.placemarkData?.thoroughfare,
+            subThoroughfare: spotData.placemarkData?.subThoroughfare,
+            postalCode: spotData.placemarkData?.postalCode,
+            locationName: spotData.placemarkData?.locationName,
+            areasOfInterest: spotData.placemarkData?.areasOfInterest,
             media: createMediaFromExtractedData(),
             sunSnapshot: nil, // TODO: Add sun snapshot if available
             weatherSnapshot: nil, // TODO: Add weather snapshot if available
@@ -234,6 +260,17 @@ struct AddSpotView: View {
             status: existingSpot.status,
             createdAt: existingSpot.createdAt,
             updatedAt: Date(), // Update timestamp
+            country: existingSpot.country,
+            countryCode: existingSpot.countryCode,
+            administrativeArea: existingSpot.administrativeArea,
+            subAdministrativeArea: existingSpot.subAdministrativeArea,
+            locality: existingSpot.locality,
+            subLocality: existingSpot.subLocality,
+            thoroughfare: existingSpot.thoroughfare,
+            subThoroughfare: existingSpot.subThoroughfare,
+            postalCode: existingSpot.postalCode,
+            locationName: existingSpot.locationName,
+            areasOfInterest: existingSpot.areasOfInterest,
             media: existingSpot.media + additionalMedia, // Append new media
             sunSnapshot: existingSpot.sunSnapshot,
             weatherSnapshot: existingSpot.weatherSnapshot,
@@ -397,6 +434,9 @@ struct NewSpotData {
     var routePolyline: String?
     var hazards: [String] = []
     var fees: [String] = []
+    
+    // Location metadata from reverse geocoding
+    var placemarkData: PlacemarkData?
     
     // Photography metadata
     var captureDate: Date?
@@ -748,6 +788,22 @@ struct SpotIdentificationStep: View {
                 }
                 
                 if let placemark = placemarks?.first {
+                    
+                    // Store all location data from placemark in spotData
+                    spotData.placemarkData = PlacemarkData(
+                        country: placemark.country,
+                        countryCode: placemark.isoCountryCode,
+                        administrativeArea: placemark.administrativeArea,
+                        subAdministrativeArea: placemark.subAdministrativeArea,
+                        locality: placemark.locality,
+                        subLocality: placemark.subLocality,
+                        thoroughfare: placemark.thoroughfare,
+                        subThoroughfare: placemark.subThoroughfare,
+                        postalCode: placemark.postalCode,
+                        locationName: placemark.name,
+                        areasOfInterest: placemark.areasOfInterest
+                    )
+                    
                     // Build a descriptive name from placemark components
                     var nameComponents: [String] = []
                     

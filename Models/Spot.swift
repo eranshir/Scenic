@@ -16,6 +16,19 @@ struct Spot: Identifiable, Codable {
     var createdAt: Date
     var updatedAt: Date
     
+    // Location metadata from reverse geocoding (optional for backward compatibility)
+    var country: String? = nil
+    var countryCode: String? = nil
+    var administrativeArea: String? = nil // State/Province
+    var subAdministrativeArea: String? = nil // County
+    var locality: String? = nil // City
+    var subLocality: String? = nil // Neighborhood
+    var thoroughfare: String? = nil // Street name
+    var subThoroughfare: String? = nil // Street number
+    var postalCode: String? = nil
+    var locationName: String? = nil // Name from placemark
+    var areasOfInterest: [String]? = nil // Landmarks/POIs
+    
     var media: [Media] = []
     var sunSnapshot: SunSnapshot?
     var weatherSnapshot: WeatherSnapshot?

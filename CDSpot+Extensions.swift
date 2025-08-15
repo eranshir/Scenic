@@ -30,10 +30,22 @@ extension CDSpot {
             status: Spot.SpotStatus(rawValue: self.status ?? "active") ?? .active,
             createdAt: self.createdAt ?? Date(),
             updatedAt: self.updatedAt ?? Date(),
+            country: self.country,
+            countryCode: self.countryCode,
+            administrativeArea: self.administrativeArea,
+            subAdministrativeArea: self.subAdministrativeArea,
+            locality: self.locality,
+            subLocality: self.subLocality,
+            thoroughfare: self.thoroughfare,
+            subThoroughfare: self.subThoroughfare,
+            postalCode: self.postalCode,
+            locationName: self.locationName,
+            areasOfInterest: decodeAreasOfInterest(self.areasOfInterestString),
             media: mediaArray,
             sunSnapshot: self.sunSnapshot?.toSunSnapshot(),
             weatherSnapshot: self.weatherSnapshot?.toWeatherSnapshot(),
             accessInfo: self.accessInfo?.toAccessInfo(),
+            comments: [],
             voteCount: Int(self.voteCount)
         )
     }
@@ -61,6 +73,19 @@ extension CDSpot {
         self.updatedAt = spot.updatedAt
         self.voteCount = Int32(spot.voteCount)
         
+        // Location metadata from reverse geocoding
+        self.country = spot.country
+        self.countryCode = spot.countryCode
+        self.administrativeArea = spot.administrativeArea
+        self.subAdministrativeArea = spot.subAdministrativeArea
+        self.locality = spot.locality
+        self.subLocality = spot.subLocality
+        self.thoroughfare = spot.thoroughfare
+        self.subThoroughfare = spot.subThoroughfare
+        self.postalCode = spot.postalCode
+        self.locationName = spot.locationName
+        self.areasOfInterestString = encodeAreasOfInterest(spot.areasOfInterest)
+        
         // Local-first properties
         if self.isLocalOnly == false {
             // This is a server spot, preserve cache settings
@@ -84,5 +109,25 @@ extension CDSpot {
             return "[]"
         }
         return string
+    }
+    
+    private func encodeAreasOfInterest(_ areas: [String]?) -> String? {
+        guard let areas = areas, !areas.isEmpty else { return nil }
+        guard let data = try? JSONEncoder().encode(areas),
+              let string = String(data: data, encoding: .utf8) else {
+            return nil
+        }
+        return string
+    }
+    
+    private func decodeAreasOfInterest(_ areasString: String?) -> [String]? {
+        guard let areasString = areasString,
+              !areasString.isEmpty,
+              let data = areasString.data(using: .utf8),
+              let areas = try? JSONDecoder().decode([String].self, from: data),
+              !areas.isEmpty else {
+            return nil
+        }
+        return areas
     }
 }

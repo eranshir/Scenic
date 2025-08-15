@@ -89,6 +89,17 @@
         <attribute name="title" optional="YES" attributeType="String"/>
         <attribute name="updatedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="voteCount" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="country" optional="YES" attributeType="String"/>
+        <attribute name="countryCode" optional="YES" attributeType="String"/>
+        <attribute name="administrativeArea" optional="YES" attributeType="String"/>
+        <attribute name="subAdministrativeArea" optional="YES" attributeType="String"/>
+        <attribute name="locality" optional="YES" attributeType="String"/>
+        <attribute name="subLocality" optional="YES" attributeType="String"/>
+        <attribute name="thoroughfare" optional="YES" attributeType="String"/>
+        <attribute name="subThoroughfare" optional="YES" attributeType="String"/>
+        <attribute name="postalCode" optional="YES" attributeType="String"/>
+        <attribute name="locationName" optional="YES" attributeType="String"/>
+        <attribute name="areasOfInterestString" optional="YES" attributeType="String"/>
         <relationship name="accessInfo" optional="YES" maxCount="1" deletionRule="Cascade" destinationEntity="CDAccessInfo" inverseName="spot" inverseEntity="CDAccessInfo"/>
         <relationship name="comments" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="CDComment" inverseName="spot" inverseEntity="CDComment"/>
         <relationship name="media" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="CDMedia" inverseName="spot" inverseEntity="CDMedia"/>

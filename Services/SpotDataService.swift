@@ -120,7 +120,7 @@ class SpotDataService: ObservableObject {
             let cdSpot: CDSpot
             if let existing = existingSpots.first {
                 // Update existing
-                updateCDSpotFromSpot(existing, spot: spot)
+                existing.updateFromSpot(spot)
                 existing.updatedAt = Date()
                 cdSpot = existing
             } else {
@@ -150,6 +150,7 @@ class SpotDataService: ObservableObject {
             }
             
             try viewContext.save()
+            
             loadSpots() // Refresh the spots array
             
             print("✅ Saved spot: \(spot.title)")
@@ -417,62 +418,22 @@ class SpotDataService: ObservableObject {
         } ?? []
         print("✅ Converted to \(mediaArray.count) media items")
         
-        return Spot(
-            id: cdSpot.id ?? UUID(),
-            title: cdSpot.title ?? "",
-            location: CLLocationCoordinate2D(
-                latitude: cdSpot.latitude,
-                longitude: cdSpot.longitude
-            ),
-            headingDegrees: cdSpot.headingDegrees == -1 ? nil : Int(cdSpot.headingDegrees),
-            elevationMeters: cdSpot.elevationMeters == -1 ? nil : Int(cdSpot.elevationMeters),
-            subjectTags: parseTagsString(cdSpot.subjectTagsString ?? "[]"),
-            difficulty: Spot.Difficulty(rawValue: Int(cdSpot.difficulty)) ?? .moderate,
-            createdBy: cdSpot.createdBy ?? UUID(),
-            privacy: Spot.Privacy(rawValue: cdSpot.privacy ?? "public") ?? .publicSpot,
-            license: cdSpot.license ?? "CC-BY-NC",
-            status: Spot.SpotStatus(rawValue: cdSpot.status ?? "active") ?? .active,
-            createdAt: cdSpot.createdAt ?? Date(),
-            updatedAt: cdSpot.updatedAt ?? Date(),
-            media: mediaArray,
-            sunSnapshot: cdSpot.sunSnapshot.map { convertCDSunSnapshotToSunSnapshot($0) },
-            weatherSnapshot: cdSpot.weatherSnapshot.map { convertCDWeatherSnapshotToWeatherSnapshot($0) },
-            accessInfo: cdSpot.accessInfo.map { convertCDAccessInfoToAccessInfo($0) },
-            voteCount: Int(cdSpot.voteCount)
-        )
+        // Use the built-in toSpot method which includes location fields
+        var spot = cdSpot.toSpot()
+        // Override media array with our converted media
+        spot.media = mediaArray
+        // Override snapshots with our converted versions
+        spot.sunSnapshot = cdSpot.sunSnapshot.map { convertCDSunSnapshotToSunSnapshot($0) }
+        spot.weatherSnapshot = cdSpot.weatherSnapshot.map { convertCDWeatherSnapshotToWeatherSnapshot($0) }
+        spot.accessInfo = cdSpot.accessInfo.map { convertCDAccessInfoToAccessInfo($0) }
+        
+        return spot
     }
     
     private func createCDSpotFromSpot(_ spot: Spot, in context: NSManagedObjectContext) -> CDSpot {
-        let cdSpot = CDSpot(context: context)
-        updateCDSpotFromSpot(cdSpot, spot: spot)
-        return cdSpot
+        return CDSpot.fromSpot(spot, in: context)
     }
     
-    private func updateCDSpotFromSpot(_ cdSpot: CDSpot, spot: Spot) {
-        cdSpot.id = spot.id
-        cdSpot.title = spot.title
-        cdSpot.latitude = spot.location.latitude
-        cdSpot.longitude = spot.location.longitude
-        cdSpot.headingDegrees = Int16(spot.headingDegrees ?? -1)
-        cdSpot.elevationMeters = Int16(spot.elevationMeters ?? -1)
-        cdSpot.subjectTagsString = encodeTagsArray(spot.subjectTags)
-        cdSpot.difficulty = Int16(spot.difficulty.rawValue)
-        cdSpot.createdBy = spot.createdBy
-        cdSpot.privacy = spot.privacy.rawValue
-        cdSpot.license = spot.license
-        cdSpot.status = spot.status.rawValue
-        cdSpot.createdAt = spot.createdAt
-        cdSpot.updatedAt = spot.updatedAt
-        cdSpot.voteCount = Int32(spot.voteCount)
-        
-        // Local-first properties
-        if cdSpot.isLocalOnly == false {
-            // This is a server spot, preserve cache settings
-        } else {
-            cdSpot.isLocalOnly = true
-            cdSpot.isPublished = false
-        }
-    }
     
     private func convertCDMediaToMedia(_ cdMedia: CDMedia) -> Media {
         let exifData = ExifData(

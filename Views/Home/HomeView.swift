@@ -180,20 +180,21 @@ struct HomeView: View {
         // Perform local search through available spots
         let allSpots = spotDataService.spots.isEmpty ? mockSpots : spotDataService.spots
         
+        // Safety check - if no spots available, return empty results immediately
+        guard !allSpots.isEmpty else {
+            searchResults = []
+            showSearchResults = true
+            return
+        }
+        
+        // Comprehensive search implementation
         searchResults = allSpots.compactMap { spot in
             // Ensure spot has valid data
             guard !spot.title.isEmpty else { return nil }
             return spot
         }
         .filter { spot in
-            // Search in title, subject tags, and region
-            let titleMatch = spot.title.localizedCaseInsensitiveContains(trimmedQuery)
-            let tagsMatch = spot.subjectTags.contains { $0.localizedCaseInsensitiveContains(trimmedQuery) }
-            
-            // Search in location-based info if available
-            let locationMatch = searchInLocationInfo(spot: spot, query: trimmedQuery)
-            
-            return titleMatch || tagsMatch || locationMatch
+            return searchMatchesSpot(spot: spot, query: trimmedQuery)
         }
         .sorted { spot1, spot2 in
             // Sort by relevance: title matches first, then others
@@ -214,9 +215,111 @@ struct HomeView: View {
         showSearchResults = true
     }
     
-    private func searchInLocationInfo(spot: Spot, query: String) -> Bool {
-        // This could be expanded to include reverse geocoding results
-        // For now, we'll do basic coordinate matching if someone types coordinates
+    private func searchMatchesSpot(spot: Spot, query: String) -> Bool {
+        let lowercaseQuery = query.lowercased()
+        
+        // 1. Title search
+        if spot.title.localizedCaseInsensitiveContains(query) {
+            return true
+        }
+        
+        // 2. Subject tags search
+        if spot.subjectTags.contains(where: { $0.localizedCaseInsensitiveContains(query) }) {
+            return true
+        }
+        
+        // 3. Difficulty level search
+        if spot.difficulty.displayName.localizedCaseInsensitiveContains(query) {
+            return true
+        }
+        
+        // 4. Camera/Device search in media
+        if searchInMedia(media: spot.media, query: lowercaseQuery) {
+            return true
+        }
+        
+        // 5. Access info search
+        if let accessInfo = spot.accessInfo, searchInAccessInfo(accessInfo: accessInfo, query: lowercaseQuery) {
+            return true
+        }
+        
+        // 6. Location-based search (stored reverse geocoded data)
+        if searchInStoredLocationData(spot: spot, query: query) {
+            return true
+        }
+        
+        // 7. Comments search
+        if spot.comments.contains(where: { $0.body.localizedCaseInsensitiveContains(query) }) {
+            return true
+        }
+        
+        return false
+    }
+    
+    private func searchInMedia(media: [Media], query: String) -> Bool {
+        for mediaItem in media {
+            // Search in device names
+            if let device = mediaItem.device, device.lowercased().contains(query) {
+                return true
+            }
+            
+            // Search in lens information
+            if let lens = mediaItem.lens, lens.lowercased().contains(query) {
+                return true
+            }
+            
+            // Search in presets and filters
+            if mediaItem.presets.contains(where: { $0.lowercased().contains(query) }) ||
+               mediaItem.filters.contains(where: { $0.lowercased().contains(query) }) {
+                return true
+            }
+            
+            // Search in EXIF data
+            if let exifData = mediaItem.exifData {
+                if let make = exifData.make, make.lowercased().contains(query) {
+                    return true
+                }
+                if let model = exifData.model, model.lowercased().contains(query) {
+                    return true
+                }
+                if let lensExif = exifData.lens, lensExif.lowercased().contains(query) {
+                    return true
+                }
+                if let software = exifData.software, software.lowercased().contains(query) {
+                    return true
+                }
+                if let colorSpace = exifData.colorSpace, colorSpace.lowercased().contains(query) {
+                    return true
+                }
+            }
+        }
+        return false
+    }
+    
+    private func searchInAccessInfo(accessInfo: AccessInfo, query: String) -> Bool {
+        // Search in hazards
+        if accessInfo.hazards.contains(where: { $0.lowercased().contains(query) }) {
+            return true
+        }
+        
+        // Search in fees
+        if accessInfo.fees.contains(where: { $0.lowercased().contains(query) }) {
+            return true
+        }
+        
+        // Search in notes
+        if let notes = accessInfo.notes, notes.lowercased().contains(query) {
+            return true
+        }
+        
+        return false
+    }
+    
+    private func searchInStoredLocationData(spot: Spot, query: String) -> Bool {
+        let lowercaseQuery = query.lowercased()
+        
+        
+        // Basic coordinate matching if someone types coordinates
         if query.contains(",") {
             let components = query.components(separatedBy: ",")
             if components.count == 2,
@@ -230,9 +333,48 @@ struct HomeView: View {
                 let distance = queryLocation.distance(from: spotLocation)
                 
                 // Consider it a match if within 5km
-                return distance < 5000
+                if distance < 5000 {
+                    return true
+                }
             }
         }
+        
+        // Search through all stored location fields from reverse geocoding
+        let locationFields: [(String, String?)] = [
+            ("country", spot.country),
+            ("countryCode", spot.countryCode),
+            ("administrativeArea", spot.administrativeArea),
+            ("subAdministrativeArea", spot.subAdministrativeArea),
+            ("locality", spot.locality),
+            ("subLocality", spot.subLocality),
+            ("thoroughfare", spot.thoroughfare),
+            ("subThoroughfare", spot.subThoroughfare),
+            ("postalCode", spot.postalCode),
+            ("locationName", spot.locationName)
+        ]
+        
+        // Check if query matches any of the location fields
+        for (_, field) in locationFields {
+            if let field = field, field.localizedCaseInsensitiveContains(lowercaseQuery) {
+                return true
+            }
+        }
+        
+        // Check areas of interest
+        if let areasOfInterest = spot.areasOfInterest {
+            for area in areasOfInterest {
+                if area.localizedCaseInsensitiveContains(lowercaseQuery) {
+                    return true
+                }
+            }
+        }
+        
+        // Check postal code partial matches (useful for ZIP code searches)
+        if let postalCode = spot.postalCode, 
+           lowercaseQuery.count >= 3 && postalCode.lowercased().hasPrefix(lowercaseQuery) {
+            return true
+        }
+        
         return false
     }
     
