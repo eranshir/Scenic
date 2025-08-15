@@ -2011,6 +2011,7 @@ struct ComprehensivePhotoDetailView: View {
     @State var selectedIndex: Int
     let onDismiss: () -> Void
     @State private var selectedTab = 0
+    @State private var showingFullScreenPhoto = false
     
     private var currentMedia: Media? {
         guard media.indices.contains(selectedIndex) else { return nil }
@@ -2064,6 +2065,27 @@ struct ComprehensivePhotoDetailView: View {
                                     }
                                 }
                                 .padding(.horizontal, 20)
+                            }
+                            
+                            // Full screen button overlay
+                            VStack {
+                                HStack {
+                                    Spacer()
+                                    Button(action: {
+                                        showingFullScreenPhoto = true
+                                    }) {
+                                        Image(systemName: "arrow.up.left.and.arrow.down.right")
+                                            .font(.title2)
+                                            .foregroundColor(.white)
+                                            .padding(12)
+                                            .background(.ultraThinMaterial)
+                                            .clipShape(Circle())
+                                            .shadow(color: .black.opacity(0.3), radius: 2, x: 0, y: 1)
+                                    }
+                                    .padding(.top, 16)
+                                    .padding(.trailing, 16)
+                                }
+                                Spacer()
                             }
                             
                             // Compass overlay if heading available
@@ -2145,6 +2167,13 @@ struct ComprehensivePhotoDetailView: View {
                     }
                 }
             }
+        }
+        .fullScreenCover(isPresented: $showingFullScreenPhoto) {
+            FullScreenPhotoView(
+                media: media,
+                selectedIndex: $selectedIndex,
+                onDismiss: { showingFullScreenPhoto = false }
+            )
         }
     }
     
@@ -2767,6 +2796,128 @@ struct CopyableMetadataRow: View {
                 .textSelection(.enabled)
             
             Spacer()
+        }
+    }
+}
+
+// MARK: - Full Screen Photo View
+
+struct FullScreenPhotoView: View {
+    let media: [Media]
+    @Binding var selectedIndex: Int
+    let onDismiss: () -> Void
+    
+    @State private var dragOffset: CGFloat = 0
+    @State private var dragVelocity: CGFloat = 0
+    
+    private var currentMedia: Media? {
+        guard media.indices.contains(selectedIndex) else { return nil }
+        return media[selectedIndex]
+    }
+    
+    var body: some View {
+        ZStack {
+            // Black background
+            Color.black
+                .ignoresSafeArea()
+            
+            if currentMedia != nil {
+                TabView(selection: $selectedIndex) {
+                    ForEach(Array(media.enumerated()), id: \.offset) { index, mediaItem in
+                        ZStack {
+                            UnifiedPhotoView(
+                                photoIdentifier: mediaItem.url,
+                                targetSize: CGSize(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height),
+                                contentMode: .fit
+                            )
+                            .aspectRatio(contentMode: .fit)
+                            .tag(index)
+                            
+                            // Tap to dismiss overlay
+                            Color.clear
+                                .contentShape(Rectangle())
+                                .onTapGesture {
+                                    onDismiss()
+                                }
+                        }
+                    }
+                }
+                .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
+                .ignoresSafeArea()
+            }
+            
+            // Top overlay with controls
+            VStack {
+                HStack {
+                    // Close button
+                    Button(action: onDismiss) {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.title)
+                            .foregroundColor(.white)
+                            .background(Circle().fill(.ultraThinMaterial))
+                    }
+                    .padding(.leading, 20)
+                    
+                    Spacer()
+                    
+                    // Photo counter
+                    if media.count > 1 {
+                        Text("\(selectedIndex + 1) of \(media.count)")
+                            .font(.caption)
+                            .fontWeight(.medium)
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 6)
+                            .background(.ultraThinMaterial)
+                            .clipShape(Capsule())
+                    }
+                    
+                    Spacer()
+                    
+                    // Share button (placeholder)
+                    Button(action: {
+                        // TODO: Add share functionality
+                    }) {
+                        Image(systemName: "square.and.arrow.up")
+                            .font(.title2)
+                            .foregroundColor(.white)
+                            .background(Circle().fill(.ultraThinMaterial))
+                    }
+                    .padding(.trailing, 20)
+                }
+                .padding(.top, 20)
+                
+                Spacer()
+            }
+            
+            // Bottom overlay with photo info (optional)
+            if let current = currentMedia, let heading = current.exifData?.gpsDirection {
+                VStack {
+                    Spacer()
+                    HStack {
+                        // Minimal compass indicator
+                        HStack(spacing: 8) {
+                            Image(systemName: "location.north")
+                                .font(.caption)
+                                .foregroundColor(.white)
+                                .rotationEffect(.degrees(Double(heading)))
+                            
+                            Text("\(Int(heading))°")
+                                .font(.caption)
+                                .fontWeight(.medium)
+                                .foregroundColor(.white)
+                        }
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(.ultraThinMaterial)
+                        .clipShape(Capsule())
+                        
+                        Spacer()
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 40)
+                }
+            }
         }
     }
 }
