@@ -5,15 +5,10 @@ struct MapView: View {
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var spotDataService: SpotDataService
     @Binding var selectedSpotId: UUID?
-    @State private var cameraPosition: MapCameraPosition = .region(
-        MKCoordinateRegion(
-            center: CLLocationCoordinate2D(latitude: 37.7749, longitude: -122.4194),
-            span: MKCoordinateSpan(latitudeDelta: 0.1, longitudeDelta: 0.1)
-        )
-    )
+    @Binding var mapCameraPosition: MapCameraPosition
     
     var body: some View {
-        Map(position: $cameraPosition, interactionModes: .all, selection: $selectedSpotId) {
+        Map(position: $mapCameraPosition, interactionModes: .all, selection: $selectedSpotId) {
             ForEach(spotDataService.spots.isEmpty ? mockSpots : spotDataService.spots) { spot in
                 Annotation(spot.title, coordinate: spot.location) {
                     NavigationLink(destination: SpotDetailView(spot: spot)) {
@@ -115,6 +110,9 @@ struct SpotPreviewCard: View {
 let mockSpots: [Spot] = []
 
 #Preview {
-    MapView(selectedSpotId: .constant(nil as UUID?))
-        .environmentObject(AppState())
+    MapView(
+        selectedSpotId: .constant(nil as UUID?),
+        mapCameraPosition: .constant(.automatic)
+    )
+    .environmentObject(AppState())
 }

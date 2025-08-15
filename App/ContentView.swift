@@ -3,6 +3,7 @@ import SwiftUI
 struct ContentView: View {
     @EnvironmentObject var appState: AppState
     @State private var selectedTab: AppTab = .home
+    @State private var addSpotViewId = UUID() // Key to force view recreation
     
     var body: some View {
         TabView(selection: $selectedTab) {
@@ -19,6 +20,7 @@ struct ContentView: View {
                 .tag(AppTab.plans)
             
             AddSpotView()
+                .id(addSpotViewId) // Use ID to force view recreation
                 .tabItem {
                     Label("Add", systemImage: "plus.circle.fill")
                 }
@@ -37,6 +39,13 @@ struct ContentView: View {
                 .tag(AppTab.profile)
         }
         .tint(.green)
+        .onChange(of: selectedTab) { oldTab, newTab in
+            // Reset AddSpotView when leaving the add tab
+            if oldTab == .add && newTab != .add {
+                // Generate new ID to force AddSpotView recreation when returning
+                addSpotViewId = UUID()
+            }
+        }
     }
 }
 
