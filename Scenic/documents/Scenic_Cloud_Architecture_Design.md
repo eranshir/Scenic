@@ -246,6 +246,60 @@ CREATE TABLE public.access_info (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- Photography Tips (user-contributed)
+CREATE TABLE public.spot_tips (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    spot_id UUID REFERENCES spots(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES profiles(id),
+    
+    -- Tip categories
+    type TEXT CHECK (type IN (
+        'composition', 'timing', 'equipment', 'settings', 
+        'weather', 'season', 'access', 'safety', 'general'
+    )),
+    
+    title TEXT,
+    body TEXT NOT NULL,
+    
+    -- Optional specific recommendations
+    recommended_focal_length TEXT, -- e.g., "24-70mm", "Wide angle"
+    recommended_aperture TEXT, -- e.g., "f/8-f/11"
+    recommended_time TEXT, -- e.g., "30 min before sunset"
+    recommended_season TEXT, -- e.g., "Fall for colors"
+    
+    -- Engagement
+    helpful_count INTEGER DEFAULT 0,
+    verified_by_creator BOOLEAN DEFAULT false,
+    
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX spot_tips_spot_idx ON spot_tips(spot_id);
+CREATE INDEX spot_tips_type_idx ON spot_tips(type);
+
+-- Media-specific tips
+CREATE TABLE public.media_annotations (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    media_id UUID REFERENCES media(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES profiles(id),
+    
+    -- Annotation type
+    type TEXT CHECK (type IN (
+        'composition_note', 'camera_settings', 'processing_tip', 
+        'location_marker', 'subject_highlight'
+    )),
+    
+    -- Content
+    text TEXT,
+    
+    -- Optional positioning for overlays (percentage of image)
+    x_percent REAL CHECK (x_percent >= 0 AND x_percent <= 100),
+    y_percent REAL CHECK (y_percent >= 0 AND y_percent <= 100),
+    
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- Social tables
 CREATE TABLE public.comments (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -351,6 +405,9 @@ CREATE INDEX activities_type_idx ON activities(type);
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE spots ENABLE ROW LEVEL SECURITY;
 ALTER TABLE media ENABLE ROW LEVEL SECURITY;
+ALTER TABLE access_info ENABLE ROW LEVEL SECURITY;
+ALTER TABLE spot_tips ENABLE ROW LEVEL SECURITY;
+ALTER TABLE media_annotations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE comments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE votes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE saves ENABLE ROW LEVEL SECURITY;
@@ -399,6 +456,64 @@ CREATE POLICY "Users can upload media to own spots"
             AND spots.created_by = auth.uid()
         )
     );
+
+-- Access info policies
+CREATE POLICY "Access info viewable with spot access"
+    ON access_info FOR SELECT
+    USING (
+        EXISTS (
+            SELECT 1 FROM spots
+            WHERE spots.id = access_info.spot_id
+            AND (spots.privacy = 'public' OR spots.created_by = auth.uid())
+        )
+    );
+
+CREATE POLICY "Spot creators can manage access info"
+    ON access_info FOR ALL
+    USING (
+        EXISTS (
+            SELECT 1 FROM spots
+            WHERE spots.id = access_info.spot_id
+            AND spots.created_by = auth.uid()
+        )
+    );
+
+-- Spot tips policies
+CREATE POLICY "Tips are viewable by everyone"
+    ON spot_tips FOR SELECT
+    USING (true);
+
+CREATE POLICY "Authenticated users can add tips"
+    ON spot_tips FOR INSERT
+    WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can edit own tips"
+    ON spot_tips FOR UPDATE
+    USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete own tips"
+    ON spot_tips FOR DELETE
+    USING (auth.uid() = user_id);
+
+-- Media annotations policies
+CREATE POLICY "Annotations viewable with media access"
+    ON media_annotations FOR SELECT
+    USING (
+        EXISTS (
+            SELECT 1 FROM media m
+            JOIN spots s ON s.id = m.spot_id
+            WHERE m.id = media_annotations.media_id
+            AND (s.privacy = 'public' OR s.created_by = auth.uid())
+        )
+    );
+
+CREATE POLICY "Authenticated users can annotate"
+    ON media_annotations FOR INSERT
+    WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can edit own annotations"
+    ON media_annotations FOR UPDATE
+    USING (auth.uid() = user_id);
 
 -- Comments policies
 CREATE POLICY "Comments are viewable by everyone"
