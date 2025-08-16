@@ -427,14 +427,37 @@ struct EnhancedPhotoTimingAnalysis: View {
     }
     
     private func calculateSunTimes() {
-        // Mock sun calculations - in a real app, this would use the NOAA Solar Position Algorithm
+        // Calculate sun times based on date and location
+        // This is a simplified calculation - a production app would use NOAA Solar Position Algorithm
         let calendar = Calendar.current
         
-        // Mock sunrise/sunset times (simplified calculation - would vary by location in real app)
-        let sunrise = calendar.date(bySettingHour: 6, minute: 30, second: 0, of: captureDate) ?? captureDate
-        let sunset = calendar.date(bySettingHour: 18, minute: 45, second: 0, of: captureDate) ?? captureDate
+        // Get day of year for seasonal adjustment
+        let dayOfYear = calendar.ordinality(of: .day, in: .year, for: captureDate) ?? 180
+        let latitude = location.latitude
+        
+        // Simplified calculation for sunrise/sunset times
+        // Base times adjusted by latitude and season
+        let seasonalOffset = sin(Double(dayOfYear - 80) * .pi / 182.5) * 1.5 // hours variation
+        let latitudeOffset = (latitude - 40) * 0.03 // hours per degree from 40°N
+        
+        // Base sunrise/sunset for 40°N latitude at equinox
+        let baseSunriseHour = 6.0 - seasonalOffset + latitudeOffset
+        let baseSunsetHour = 18.0 + seasonalOffset - latitudeOffset
+        
+        // Convert to actual times
+        let sunriseHour = max(0, min(23, Int(baseSunriseHour)))
+        let sunriseMinute = Int(abs(baseSunriseHour - Double(sunriseHour)) * 60)
+        let sunsetHour = max(0, min(23, Int(baseSunsetHour)))
+        let sunsetMinute = Int(abs(baseSunsetHour - Double(sunsetHour)) * 60)
+        
+        let sunrise = calendar.date(bySettingHour: sunriseHour, minute: sunriseMinute, second: 0, of: captureDate) ?? captureDate
+        let sunset = calendar.date(bySettingHour: sunsetHour, minute: sunsetMinute, second: 0, of: captureDate) ?? captureDate
+        
+        // Golden hour: 1 hour before sunset to 30 min after
         let goldenHourStart = calendar.date(byAdding: .minute, value: -60, to: sunset) ?? sunset
         let goldenHourEnd = calendar.date(byAdding: .minute, value: 30, to: sunset) ?? sunset
+        
+        // Blue hour: sunset to 45 min after
         let blueHourStart = sunset
         let blueHourEnd = calendar.date(byAdding: .minute, value: 45, to: sunset) ?? sunset
         
@@ -597,14 +620,37 @@ struct CompactPhotoTimingAnalysis: View {
     }
     
     private func calculateSunTimes() {
-        // Mock sun calculations - in a real app, this would use the NOAA Solar Position Algorithm
+        // Calculate sun times based on date and location
+        // This is a simplified calculation - a production app would use NOAA Solar Position Algorithm
         let calendar = Calendar.current
         
-        // Mock sunrise/sunset times (simplified calculation - would vary by location in real app)
-        let sunrise = calendar.date(bySettingHour: 6, minute: 30, second: 0, of: captureDate) ?? captureDate
-        let sunset = calendar.date(bySettingHour: 18, minute: 45, second: 0, of: captureDate) ?? captureDate
+        // Get day of year for seasonal adjustment
+        let dayOfYear = calendar.ordinality(of: .day, in: .year, for: captureDate) ?? 180
+        let latitude = location.latitude
+        
+        // Simplified calculation for sunrise/sunset times
+        // Base times adjusted by latitude and season
+        let seasonalOffset = sin(Double(dayOfYear - 80) * .pi / 182.5) * 1.5 // hours variation
+        let latitudeOffset = (latitude - 40) * 0.03 // hours per degree from 40°N
+        
+        // Base sunrise/sunset for 40°N latitude at equinox
+        let baseSunriseHour = 6.0 - seasonalOffset + latitudeOffset
+        let baseSunsetHour = 18.0 + seasonalOffset - latitudeOffset
+        
+        // Convert to actual times
+        let sunriseHour = max(0, min(23, Int(baseSunriseHour)))
+        let sunriseMinute = Int(abs(baseSunriseHour - Double(sunriseHour)) * 60)
+        let sunsetHour = max(0, min(23, Int(baseSunsetHour)))
+        let sunsetMinute = Int(abs(baseSunsetHour - Double(sunsetHour)) * 60)
+        
+        let sunrise = calendar.date(bySettingHour: sunriseHour, minute: sunriseMinute, second: 0, of: captureDate) ?? captureDate
+        let sunset = calendar.date(bySettingHour: sunsetHour, minute: sunsetMinute, second: 0, of: captureDate) ?? captureDate
+        
+        // Golden hour: 1 hour before sunset to 30 min after
         let goldenHourStart = calendar.date(byAdding: .minute, value: -60, to: sunset) ?? sunset
         let goldenHourEnd = calendar.date(byAdding: .minute, value: 30, to: sunset) ?? sunset
+        
+        // Blue hour: sunset to 45 min after
         let blueHourStart = sunset
         let blueHourEnd = calendar.date(byAdding: .minute, value: 45, to: sunset) ?? sunset
         
@@ -2386,14 +2432,37 @@ struct TimingAnalysisCard: View {
     }
     
     private func calculateSunTimes() {
-        // Mock sun calculations - in a real app, this would use the NOAA Solar Position Algorithm
+        // Calculate sun times based on date and location
+        // This is a simplified calculation - a production app would use NOAA Solar Position Algorithm
         let calendar = Calendar.current
         
-        // Mock sunrise/sunset times (simplified calculation - would vary by location in real app)
-        let sunrise = calendar.date(bySettingHour: 6, minute: 30, second: 0, of: captureDate) ?? captureDate
-        let sunset = calendar.date(bySettingHour: 18, minute: 45, second: 0, of: captureDate) ?? captureDate
+        // Get day of year for seasonal adjustment
+        let dayOfYear = calendar.ordinality(of: .day, in: .year, for: captureDate) ?? 180
+        let latitude = location.latitude
+        
+        // Simplified calculation for sunrise/sunset times
+        // Base times adjusted by latitude and season
+        let seasonalOffset = sin(Double(dayOfYear - 80) * .pi / 182.5) * 1.5 // hours variation
+        let latitudeOffset = (latitude - 40) * 0.03 // hours per degree from 40°N
+        
+        // Base sunrise/sunset for 40°N latitude at equinox
+        let baseSunriseHour = 6.0 - seasonalOffset + latitudeOffset
+        let baseSunsetHour = 18.0 + seasonalOffset - latitudeOffset
+        
+        // Convert to actual times
+        let sunriseHour = max(0, min(23, Int(baseSunriseHour)))
+        let sunriseMinute = Int(abs(baseSunriseHour - Double(sunriseHour)) * 60)
+        let sunsetHour = max(0, min(23, Int(baseSunsetHour)))
+        let sunsetMinute = Int(abs(baseSunsetHour - Double(sunsetHour)) * 60)
+        
+        let sunrise = calendar.date(bySettingHour: sunriseHour, minute: sunriseMinute, second: 0, of: captureDate) ?? captureDate
+        let sunset = calendar.date(bySettingHour: sunsetHour, minute: sunsetMinute, second: 0, of: captureDate) ?? captureDate
+        
+        // Golden hour: 1 hour before sunset to 30 min after
         let goldenHourStart = calendar.date(byAdding: .minute, value: -60, to: sunset) ?? sunset
         let goldenHourEnd = calendar.date(byAdding: .minute, value: 30, to: sunset) ?? sunset
+        
+        // Blue hour: sunset to 45 min after
         let blueHourStart = sunset
         let blueHourEnd = calendar.date(byAdding: .minute, value: 45, to: sunset) ?? sunset
         
