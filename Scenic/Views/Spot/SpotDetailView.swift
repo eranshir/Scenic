@@ -1758,7 +1758,8 @@ struct InfinitePhotoCarousel: View {
     let onPhotoTap: () -> Void
     
     @State private var dragOffset: CGFloat = 0
-    @State private var scrollOffset: CGFloat = 0
+    @State private var internalIndex: Int = 0
+    @State private var isAnimating = false
     
     // Create infinite scroll by tripling the array
     private var infiniteMedia: [Media] {
@@ -1772,57 +1773,45 @@ struct InfinitePhotoCarousel: View {
     var body: some View {
         GeometryReader { geometry in
             let screenWidth = geometry.size.width
-            let itemWidth = screenWidth * 0.9  // 90% of screen width for main photo
-            let itemSpacing: CGFloat = 8  // Minimal spacing between photos
-            let sideItemWidth = screenWidth * 0.2  // Width for partial side photos
+            let itemWidth = screenWidth * 0.85  // Slightly smaller to ensure full visibility
+            let itemSpacing: CGFloat = 10  // Spacing between photos
             let totalItemWidth = itemWidth + itemSpacing
             
             HStack(spacing: itemSpacing) {
-                ForEach(Array(media.enumerated()), id: \.offset) { index, mediaItem in
-                    let isCenterItem = index == selectedIndex
+                ForEach(Array(infiniteMedia.enumerated()), id: \.offset) { index, mediaItem in
+                    let realIndex = index % media.count
+                    let isCenterItem = index == internalIndex
                     
                     CarouselPhotoItem(
                         mediaItem: mediaItem,
                         isCenterItem: isCenterItem,
                         itemWidth: itemWidth,
-                        sideItemWidth: sideItemWidth,
-                        selectedIndex: selectedIndex,
+                        sideItemWidth: itemWidth * 0.2,
+                        selectedIndex: realIndex,
                         onTap: {
                             if isCenterItem {
                                 onPhotoTap()
                             } else {
                                 withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
-                                    selectedIndex = index
+                                    moveToIndex(index)
                                 }
                             }
                         }
                     )
+                    .frame(width: itemWidth)
                 }
             }
-            .offset(x: {
-                let screenCenterX = screenWidth / 2
-                let itemCenterOffset = itemWidth / 2
-                let selectedItemPosition = CGFloat(selectedIndex) * totalItemWidth
-                return screenCenterX - itemCenterOffset - selectedItemPosition + dragOffset
-            }())
+            .offset(x: calculateOffset(screenWidth: screenWidth, itemWidth: totalItemWidth))
             .gesture(
                 DragGesture()
                     .onChanged { value in
-                        dragOffset = value.translation.width
+                        if !isAnimating {
+                            dragOffset = value.translation.width
+                        }
                     }
-                    .onEnded { (value: DragGesture.Value) in
-                        let threshold: CGFloat = 50
-                        let translationX = value.translation.width
-                        
-                        withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
-                            if translationX > threshold {
-                                // Swipe right - go to previous (with wrap-around)
-                                selectedIndex = (selectedIndex - 1 + media.count) % media.count
-                            } else if translationX < -threshold {
-                                // Swipe left - go to next (with wrap-around)
-                                selectedIndex = (selectedIndex + 1) % media.count
-                            }
-                            dragOffset = 0
+                    .onEnded { value in
+                        if !isAnimating {
+                            handleDragEnd(value: value, itemWidth: totalItemWidth)
                         }
                     }
             )
@@ -1830,9 +1819,29 @@ struct InfinitePhotoCarousel: View {
         .onAppear {
             // Start with first photo that has heading data, or just the first photo
             if let firstWithHeading = media.firstIndex(where: { $0.exifData?.gpsDirection != nil }) {
+                internalIndex = centerOffset + firstWithHeading
                 selectedIndex = firstWithHeading
             } else {
+                internalIndex = centerOffset
                 selectedIndex = 0
+            }
+        }
+        .onChange(of: selectedIndex) { oldValue, newValue in
+            // Only update internal index when external selectedIndex changes from outside
+            // and we're not already animating
+            if !isAnimating && oldValue != newValue {
+                // Check if we should take the shortest path
+                let currentRealIndex = internalIndex % media.count
+                let normalizedCurrent = currentRealIndex < 0 ? currentRealIndex + media.count : currentRealIndex
+                
+                if normalizedCurrent != newValue {
+                    // External change, update to match
+                    withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
+                        // Keep the current position in the triple array but adjust for the new index
+                        let offset = newValue - normalizedCurrent
+                        internalIndex += offset
+                    }
+                }
             }
         }
     }
@@ -1840,14 +1849,73 @@ struct InfinitePhotoCarousel: View {
     private func calculateOffset(screenWidth: CGFloat, itemWidth: CGFloat) -> CGFloat {
         guard !media.isEmpty else { return 0 }
         
-        let centerX = screenWidth / 2
+        let screenCenterX = screenWidth / 2
         let itemCenterOffset = itemWidth / 2
+        let selectedItemPosition = CGFloat(internalIndex) * itemWidth
+        return screenCenterX - itemCenterOffset - selectedItemPosition + dragOffset
+    }
+    
+    private func handleDragEnd(value: DragGesture.Value, itemWidth: CGFloat) {
+        let threshold: CGFloat = 50
+        let translationX = value.translation.width
         
-        // Calculate position for infinite scroll (middle section of tripled array)
-        let infiniteIndex = centerOffset + selectedIndex
-        let totalOffset = CGFloat(infiniteIndex) * itemWidth
+        isAnimating = true
         
-        return centerX - itemCenterOffset - totalOffset
+        withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
+            if translationX > threshold {
+                // Swipe right - go to previous
+                internalIndex -= 1
+            } else if translationX < -threshold {
+                // Swipe left - go to next
+                internalIndex += 1
+            }
+            dragOffset = 0
+        }
+        
+        // Update the binding and reset position if needed
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+            isAnimating = false
+            
+            // Calculate the real index with proper negative handling
+            var realIndex = internalIndex % media.count
+            if realIndex < 0 {
+                realIndex += media.count
+            }
+            selectedIndex = realIndex
+            
+            // Smart reset: only reset if we're at the edges of our triple array
+            // and ensure we don't trigger animation during reset
+            if internalIndex < centerOffset {
+                // We've moved into the left copy
+                internalIndex = internalIndex + media.count
+            } else if internalIndex >= centerOffset + media.count {
+                // We've moved into the right copy
+                internalIndex = internalIndex - media.count
+            }
+        }
+    }
+    
+    private func moveToIndex(_ index: Int) {
+        isAnimating = true
+        internalIndex = index
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+            isAnimating = false
+            
+            // Calculate the real index
+            var realIndex = index % media.count
+            if realIndex < 0 {
+                realIndex += media.count
+            }
+            selectedIndex = realIndex
+            
+            // Smart reset without animation
+            if internalIndex < centerOffset {
+                internalIndex = internalIndex + media.count
+            } else if internalIndex >= centerOffset + media.count {
+                internalIndex = internalIndex - media.count
+            }
+        }
     }
 }
 
@@ -1877,9 +1945,9 @@ struct CarouselPhotoItem: View {
                 CompassOverlay(heading: heading)
             }
         }
-        .frame(width: isCenterItem ? itemWidth : itemWidth * 0.95)
-        .scaleEffect(isCenterItem ? 1.0 : 0.95)
-        .opacity(isCenterItem ? 1.0 : 0.8)
+        .frame(width: itemWidth)
+        .scaleEffect(isCenterItem ? 1.0 : 0.9)
+        .opacity(isCenterItem ? 1.0 : 0.7)
         .animation(.spring(response: 0.5, dampingFraction: 0.8), value: selectedIndex)
         .onTapGesture {
             onTap()
