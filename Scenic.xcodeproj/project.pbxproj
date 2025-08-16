@@ -29,9 +29,56 @@
 		056C8FE62E4FEBB400D746BA /* ScenicUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ScenicUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		056C90DA2E4FEC2600D746BA /* Exceptions for "Scenic" folder in "Scenic" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				CLAUDE.md,
+				"documents/files/explorer emoji.png",
+				"documents/files/Scenic_AppIcon/AppIcon.appiconset/appicon_ios-marketing_1024@1x.png",
+				"documents/files/Scenic_AppIcon/AppIcon.appiconset/appicon_ipad_20@1x.png",
+				"documents/files/Scenic_AppIcon/AppIcon.appiconset/appicon_ipad_20@2x.png",
+				"documents/files/Scenic_AppIcon/AppIcon.appiconset/appicon_ipad_40@1x.png",
+				"documents/files/Scenic_AppIcon/AppIcon.appiconset/appicon_ipad_40@2x.png",
+				"documents/files/Scenic_AppIcon/AppIcon.appiconset/appicon_ipad_76@1x.png",
+				"documents/files/Scenic_AppIcon/AppIcon.appiconset/appicon_ipad_76@2x.png",
+				"documents/files/Scenic_AppIcon/AppIcon.appiconset/appicon_ipad_83_5@2x.png",
+				"documents/files/Scenic_AppIcon/AppIcon.appiconset/appicon_iphone_20@2x.png",
+				"documents/files/Scenic_AppIcon/AppIcon.appiconset/appicon_iphone_20@3x.png",
+				"documents/files/Scenic_AppIcon/AppIcon.appiconset/appicon_iphone_40@2x.png",
+				"documents/files/Scenic_AppIcon/AppIcon.appiconset/appicon_iphone_40@3x.png",
+				"documents/files/Scenic_AppIcon/AppIcon.appiconset/appicon_iphone_60@2x.png",
+				"documents/files/Scenic_AppIcon/AppIcon.appiconset/appicon_iphone_60@3x.png",
+				documents/files/Scenic_AppIcon/AppIcon.appiconset/Contents.json,
+				documents/files/Scenic_AppIcon/Marketing_1024.png,
+				documents/files/Scenic_AppIcon/Preview_180.png,
+				documents/motivation.md,
+				documents/Scenic_ADR_Architecture.md,
+				documents/Scenic_Analytics_and_Event_Taxonomy.md,
+				documents/Scenic_Data_Model_and_Flows.md,
+				documents/Scenic_Database_Schema.md,
+				documents/Scenic_Doc_Index.md,
+				documents/scenic_lo_fi_wireframes_react_prototype.jsx,
+				documents/Scenic_NFRs_and_Acceptance_Criteria.md,
+				documents/Scenic_PRD.md,
+				documents/Scenic_Project_Plan.md,
+				documents/Scenic_Prototype_Project_Plan.md,
+				documents/Scenic_UX_Screens.md,
+				QUICK_SETUP.md,
+				Scenic/Info.plist,
+				ScenicDataModel.md,
+				setup_coredata.sh,
+			);
+			target = 056C8FCE2E4FEBB300D746BA /* Scenic */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		056C8FD12E4FEBB300D746BA /* Scenic */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				056C90DA2E4FEC2600D746BA /* Exceptions for "Scenic" folder in "Scenic" target */,
+			);
 			path = Scenic;
 			sourceTree = "<group>";
 		};
@@ -393,6 +440,7 @@
 		056C8FF12E4FEBB400D746BA /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES = "";
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
