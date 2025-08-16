@@ -1,5 +1,18 @@
 # Scenic — Project Plan & Work Breakdown Structure
 
+## Priority Development Tasks (Updated: 2025-08-16)
+- [ ] Implement the discover feed
+- [ ] Implement authentication and user mgmt
+- [ ] Implement server side
+- [ ] Populate with spots all over the world 
+- [ ] Implement Planning
+    - [ ] Collect spots to a plan
+    - [ ] Get guidance from LLM on your plan
+    - [ ] Payment for planning feature 
+- [ ] Implement comments/discussions/stars 
+- [ ] Implement Explorer vanity mechanics 
+- [ ] Implement onboarding 
+
 ## Timeline (Condensed)
 - **Phase 0 (2–3 wks)** Foundations & spikes.
 - **Phase 1 (6–8 wks)** iOS core client.
