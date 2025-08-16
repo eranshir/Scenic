@@ -1,7 +1,7 @@
 # Scenic — Project Plan & Work Breakdown Structure
 
 ## Priority Development Tasks (Updated: 2025-08-16)
-- [ ] Implement the discover feed
+- [x] Implement the discover feed ✅
 - [ ] Implement authentication and user mgmt
 - [ ] Implement server side
 - [ ] Populate with spots all over the world 
