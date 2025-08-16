@@ -17,8 +17,8 @@ struct SpotDetailView: View {
         VStack(spacing: 0) {
             // Title section at the top
             spotTitleSection
-                .padding(.horizontal, 20)
-                .padding(.vertical, 12)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 8)
                 .background(.ultraThinMaterial)
             
             GeometryReader { geometry in
@@ -26,13 +26,13 @@ struct SpotDetailView: View {
                 let availableHeight = geometry.size.height - safeArea.top - safeArea.bottom
                 
                 VStack(spacing: 0) {
-                    // Photos carousel - expanded to take more space
+                    // Photos carousel - optimized for better balance
                     mediaCarousel
-                        .frame(height: availableHeight * 0.65)
+                        .frame(height: availableHeight * 0.5)
                     
-                    // Bottom section - Access & Route 
+                    // Bottom section - Access & Route with more space
                     accessRouteSection
-                        .frame(height: availableHeight * 0.35)
+                        .frame(height: availableHeight * 0.5)
                 }
             }
         }
@@ -89,7 +89,7 @@ struct SpotDetailView: View {
                 }
             } else {
                 // Enhanced infinite carousel with proper implementation
-                VStack(spacing: 12) {
+                VStack(spacing: 8) {
                     // Main photo carousel with infinite scroll
                     InfinitePhotoCarousel(
                         media: spot.media,
@@ -116,6 +116,7 @@ struct SpotDetailView: View {
                             photoIndex: selectedPhotoIndex
                         )
                         .padding(.horizontal, 16)
+                        .padding(.bottom, 8)
                         .id("\(selectedPhotoIndex)-\(captureDate)") // Force view refresh on photo change
                     }
                 }
@@ -283,9 +284,9 @@ struct CompactHeadingInfoView: View {
                 .foregroundColor(.secondary)
             }
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 10)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 10))
+        .padding(.horizontal, 12)
+        .padding(.vertical, 6)
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 8))
     }
 
     private func compassDirection(for heading: Float) -> String {
@@ -412,9 +413,9 @@ struct EnhancedPhotoTimingAnalysis: View {
                 }
             }
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 10)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 10))
+        .padding(.horizontal, 12)
+        .padding(.vertical, 6)
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 8))
         .onAppear {
             calculateSunTimes()
         }
@@ -1798,7 +1799,6 @@ struct InfinitePhotoCarousel: View {
                             }
                         }
                     )
-                    .frame(width: itemWidth)
                 }
             }
             .offset(x: calculateOffset(screenWidth: screenWidth, itemWidth: totalItemWidth))
@@ -1930,22 +1930,25 @@ struct CarouselPhotoItem: View {
     let onTap: () -> Void
     
     var body: some View {
-        ZStack {
-            // Photo from cached system only
-            UnifiedPhotoView(
-                photoIdentifier: mediaItem.url,
-                targetSize: CGSize(width: 400, height: 300),
-                contentMode: .fill
-            )
-            .aspectRatio(4/3, contentMode: .fit)
-            .clipShape(RoundedRectangle(cornerRadius: isCenterItem ? 16 : 12))
-            
-            // Compass rose overlay on center item only
-            if isCenterItem, let heading = mediaItem.exifData?.gpsDirection {
-                CompassOverlay(heading: heading)
+        GeometryReader { geometry in
+            ZStack {
+                // Photo from cached system only
+                UnifiedPhotoView(
+                    photoIdentifier: mediaItem.url,
+                    targetSize: CGSize(width: 400, height: 400),
+                    contentMode: .fill
+                )
+                .aspectRatio(contentMode: .fill)
+                .frame(width: geometry.size.width, height: geometry.size.height)
+                .clipShape(RoundedRectangle(cornerRadius: isCenterItem ? 12 : 10))
+                
+                // Compass rose overlay on center item only
+                if isCenterItem, let heading = mediaItem.exifData?.gpsDirection {
+                    CompassOverlay(heading: heading)
+                }
             }
         }
-        .frame(width: itemWidth)
+        .frame(width: itemWidth, height: .infinity)
         .scaleEffect(isCenterItem ? 1.0 : 0.9)
         .opacity(isCenterItem ? 1.0 : 0.7)
         .animation(.spring(response: 0.5, dampingFraction: 0.8), value: selectedIndex)
