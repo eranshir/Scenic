@@ -940,9 +940,26 @@ struct SpotIdentificationStep: View {
     private func distanceString(to location: CLLocationCoordinate2D) -> String {
         guard let userLocation = spotData.location else { return "" }
         
+        // Validate coordinates to prevent NaN
+        guard userLocation.latitude.isFinite && userLocation.longitude.isFinite &&
+              location.latitude.isFinite && location.longitude.isFinite else {
+            return "Distance unavailable"
+        }
+        
+        // Validate coordinate ranges
+        guard abs(userLocation.latitude) <= 90 && abs(location.latitude) <= 90 &&
+              abs(userLocation.longitude) <= 180 && abs(location.longitude) <= 180 else {
+            return "Invalid location"
+        }
+        
         let from = CLLocation(latitude: userLocation.latitude, longitude: userLocation.longitude)
         let to = CLLocation(latitude: location.latitude, longitude: location.longitude)
         let distance = from.distance(from: to)
+        
+        // Validate the calculated distance
+        guard distance.isFinite && distance >= 0 else {
+            return "Distance unavailable"
+        }
         
         if distance < 1000 {
             return String(format: "%.0fm away", distance)

@@ -259,9 +259,25 @@ struct RouteStep: View {
         
         var totalDistance: CLLocationDistance = 0
         for i in 1..<routePoints.count {
-            let start = CLLocation(latitude: routePoints[i-1].latitude, longitude: routePoints[i-1].longitude)
-            let end = CLLocation(latitude: routePoints[i].latitude, longitude: routePoints[i].longitude)
-            totalDistance += start.distance(from: end)
+            let prevPoint = routePoints[i-1]
+            let currentPoint = routePoints[i]
+            
+            // Validate coordinates to prevent NaN
+            guard prevPoint.latitude.isFinite && prevPoint.longitude.isFinite &&
+                  currentPoint.latitude.isFinite && currentPoint.longitude.isFinite &&
+                  abs(prevPoint.latitude) <= 90 && abs(prevPoint.longitude) <= 180 &&
+                  abs(currentPoint.latitude) <= 90 && abs(currentPoint.longitude) <= 180 else {
+                continue
+            }
+            
+            let start = CLLocation(latitude: prevPoint.latitude, longitude: prevPoint.longitude)
+            let end = CLLocation(latitude: currentPoint.latitude, longitude: currentPoint.longitude)
+            let segmentDistance = start.distance(from: end)
+            
+            // Only add valid distances
+            if segmentDistance.isFinite && segmentDistance >= 0 {
+                totalDistance += segmentDistance
+            }
         }
         
         return Int(totalDistance)

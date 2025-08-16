@@ -392,6 +392,24 @@ class SpotDataService: ObservableObject {
     }
     
     private func calculateDistance(from: (Double, Double), to: (Double, Double)) -> Double {
+        // Validate coordinates to prevent NaN
+        guard from.0.isFinite && from.1.isFinite && to.0.isFinite && to.1.isFinite else {
+            print("⚠️ Invalid coordinates in distance calculation: from(\(from.0), \(from.1)) to(\(to.0), \(to.1))")
+            return Double.infinity
+        }
+        
+        // Validate latitude ranges (-90 to 90)
+        guard abs(from.0) <= 90 && abs(to.0) <= 90 else {
+            print("⚠️ Invalid latitude values: from(\(from.0)) to(\(to.0))")
+            return Double.infinity
+        }
+        
+        // Validate longitude ranges (-180 to 180)
+        guard abs(from.1) <= 180 && abs(to.1) <= 180 else {
+            print("⚠️ Invalid longitude values: from(\(from.1)) to(\(to.1))")
+            return Double.infinity
+        }
+        
         let earthRadius = 6371.0 // Earth's radius in kilometers
         
         let lat1Rad = from.0 * .pi / 180.0
@@ -402,9 +420,20 @@ class SpotDataService: ObservableObject {
         let a = sin(deltaLatRad / 2) * sin(deltaLatRad / 2) +
                 cos(lat1Rad) * cos(lat2Rad) *
                 sin(deltaLonRad / 2) * sin(deltaLonRad / 2)
-        let c = 2 * atan2(sqrt(a), sqrt(1 - a))
         
-        return earthRadius * c
+        // Ensure 'a' is within valid range [0, 1] to prevent NaN from sqrt
+        let aClamped = min(max(a, 0), 1)
+        let c = 2 * atan2(sqrt(aClamped), sqrt(1 - aClamped))
+        
+        let distance = earthRadius * c
+        
+        // Final validation
+        guard distance.isFinite else {
+            print("⚠️ Calculated distance is not finite: \(distance)")
+            return Double.infinity
+        }
+        
+        return distance
     }
     
     // MARK: - CoreData Conversion Helpers
