@@ -55,6 +55,10 @@ scripts/geograph_test_stats/
 scripts/scraped_photos/
 scripts/test_scrape/
 scripts/geograph_collection/
+scripts/flickr_scenic_photos/
+scripts/flickr_test_photos/
+scripts/flickr_api_test/
+scripts/flickr_collection/
 
 # Test data
 Scenic/documents/spots/

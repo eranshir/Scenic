@@ -6,6 +6,8 @@ import Supabase
 class AppState: ObservableObject {
     @Published var currentUser: User?
     @Published var isAuthenticated = false
+    @Published var isGuestMode = false
+    @Published var authProvider: AuthProvider = .none
     @Published var spots: [Spot] = []
     @Published var plans: [Plan] = []
     @Published var journalEntries: [Media] = []
@@ -17,6 +19,13 @@ class AppState: ObservableObject {
     
     @Published var filterSettings = FilterSettings()
     @Published var mapRegion: MapRegion?
+    
+    enum AuthProvider {
+        case none
+        case apple
+        case google
+        case guest
+    }
     
     init() {
         // Check for existing session on app launch
@@ -44,11 +53,55 @@ class AppState: ObservableObject {
         
         let user = session.user
         
+        // Debug logging
+        print("🔍 AppState handleExistingSession:")
+        print("  - User ID: \(user.id)")
+        print("  - Email: \(user.email ?? "nil")")
+        print("  - User Metadata Keys: \(user.userMetadata.keys)")
+        print("  - App Metadata Keys: \(user.appMetadata.keys)")
+        
+        // Determine auth provider and guest status
+        if user.email == nil || user.appMetadata["provider"]?.value as? String == "anonymous" {
+            isGuestMode = true
+            authProvider = .guest
+        } else if let provider = user.appMetadata["provider"]?.value as? String {
+            switch provider {
+            case "apple":
+                authProvider = .apple
+            case "google":
+                authProvider = .google
+            default:
+                authProvider = .none
+            }
+        }
+        
         // Extract metadata values properly
-        let handle = (user.userMetadata["handle"]?.value as? String) ?? user.email?.components(separatedBy: "@").first ?? "user"
-        let fullName = (user.userMetadata["full_name"]?.value as? String) ?? "User"
+        let handle = (user.userMetadata["handle"]?.value as? String) ?? 
+                    (user.userMetadata["preferred_username"]?.value as? String) ??
+                    user.email?.components(separatedBy: "@").first ?? 
+                    (isGuestMode ? "guest" : "user")
+        
+        // For Apple Sign-In, try to get the name from user metadata
+        var fullName = (user.userMetadata["full_name"]?.value as? String) ?? ""
+        if fullName.isEmpty {
+            fullName = (user.userMetadata["name"]?.value as? String) ?? ""
+        }
+        if fullName.isEmpty {
+            fullName = (user.userMetadata["display_name"]?.value as? String) ?? ""
+        }
+        
+        print("  - Extracted handle: \(handle)")
+        print("  - Extracted fullName: \(fullName)")
+        
+        if fullName.isEmpty && !isGuestMode {
+            fullName = user.email?.components(separatedBy: "@").first?.capitalized ?? "User"
+        }
+        if isGuestMode {
+            fullName = "Guest User"
+        }
+        
         let avatarUrl = user.userMetadata["avatar_url"]?.value as? String
-        let bio = (user.userMetadata["bio"]?.value as? String) ?? ""
+        let bio = (user.userMetadata["bio"]?.value as? String) ?? (isGuestMode ? "Exploring in guest mode" : "")
         
         currentUser = User(
             id: UUID(uuidString: user.id.uuidString) ?? UUID(),
@@ -57,9 +110,9 @@ class AppState: ObservableObject {
             email: user.email ?? "",
             avatarUrl: avatarUrl,
             bio: bio,
-            reputationScore: 0,
+            reputationScore: isGuestMode ? 0 : 0,
             homeRegion: "",
-            roles: [.user],
+            roles: isGuestMode ? [.guest] : [.user],
             badges: [],
             followersCount: 0,
             followingCount: 0,
@@ -74,7 +127,12 @@ class AppState: ObservableObject {
             try? await supabase.auth.signOut()
             await MainActor.run {
                 isAuthenticated = false
+                isGuestMode = false
+                authProvider = .none
                 currentUser = nil
+                spots = []
+                plans = []
+                journalEntries = []
             }
         }
     }

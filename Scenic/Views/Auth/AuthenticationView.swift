@@ -163,6 +163,37 @@ struct AuthenticationView: View {
                 
                 Task {
                     do {
+                        // Extract user's full name if available
+                        var additionalData: [String: Any] = [:]
+                        
+                        // Debug: Log what Apple provides
+                        print("🍎 Apple Sign In Data:")
+                        print("  - User ID: \(appleIDCredential.user)")
+                        print("  - Email: \(appleIDCredential.email ?? "nil")")
+                        print("  - Given Name: \(appleIDCredential.fullName?.givenName ?? "nil")")
+                        print("  - Family Name: \(appleIDCredential.fullName?.familyName ?? "nil")")
+                        
+                        if let fullName = appleIDCredential.fullName {
+                            let nameComponents = [
+                                fullName.givenName,
+                                fullName.familyName
+                            ].compactMap { $0 }.joined(separator: " ")
+                            
+                            if !nameComponents.isEmpty {
+                                additionalData["display_name"] = nameComponents
+                                additionalData["full_name"] = nameComponents
+                                print("  - Constructed Full Name: \(nameComponents)")
+                            } else {
+                                print("  - No name components available")
+                            }
+                        } else {
+                            print("  - fullName object is nil")
+                        }
+                        
+                        if let email = appleIDCredential.email {
+                            additionalData["email"] = email
+                        }
+                        
                         // Sign in with Supabase using Apple ID token
                         let session = try await supabase.auth.signInWithIdToken(
                             credentials: .init(
@@ -170,6 +201,36 @@ struct AuthenticationView: View {
                                 idToken: idTokenString
                             )
                         )
+                        
+                        // Debug: Log what Supabase returns
+                        print("📊 Supabase Session Data:")
+                        print("  - User ID: \(session.user.id)")
+                        print("  - Email: \(session.user.email ?? "nil")")
+                        print("  - User Metadata: \(session.user.userMetadata)")
+                        print("  - App Metadata: \(session.user.appMetadata)")
+                        
+                        // Update the profile with the user's name if we have it from Apple
+                        // Note: This only happens on first authorization with Apple
+                        if let displayName = additionalData["display_name"] as? String {
+                            print("📝 Updating profile with Apple-provided name: \(displayName)")
+                            
+                            // Wait a moment for the trigger to create the profile
+                            try? await Task.sleep(nanoseconds: 500_000_000) // 0.5 seconds
+                            
+                            // Update the profile with the real name
+                            do {
+                                try await supabase
+                                    .from("profiles")
+                                    .update(["display_name": displayName])
+                                    .eq("id", value: session.user.id.uuidString)
+                                    .execute()
+                                print("✅ Successfully updated profile with display name")
+                            } catch {
+                                print("❌ Failed to update profile: \(error)")
+                            }
+                        } else {
+                            print("ℹ️ No name provided by Apple (subsequent sign-in)")
+                        }
                         
                         await MainActor.run {
                             handleSuccessfulAuth(session: session)
@@ -244,13 +305,15 @@ struct AuthenticationView: View {
                 await MainActor.run {
                     // If anonymous auth fails, just proceed as guest without Supabase session
                     appState.isAuthenticated = true  // Changed to true to enter the app
+                    appState.isGuestMode = true
+                    appState.authProvider = .guest
                     appState.currentUser = User(
                         id: UUID(),
                         handle: "guest",
                         name: "Guest User",
                         email: "",
                         avatarUrl: nil,
-                        bio: "",
+                        bio: "Exploring in guest mode",
                         reputationScore: 0,
                         homeRegion: "",
                         roles: [.guest],
@@ -268,37 +331,61 @@ struct AuthenticationView: View {
     }
     
     private func handleSuccessfulAuth(session: Session, isGuest: Bool = false) {
-        // Update app state with authenticated user
-        appState.isAuthenticated = true
-        
-        // Create or update user in app state
-        let user = session.user
-        
-        // Extract metadata values properly
-        let handle = (user.userMetadata["handle"]?.value as? String) ?? user.email?.components(separatedBy: "@").first ?? "user"
-        let fullName = (user.userMetadata["full_name"]?.value as? String) ?? "User"
-        let avatarUrl = user.userMetadata["avatar_url"]?.value as? String
-        let bio = (user.userMetadata["bio"]?.value as? String) ?? ""
-        
-        appState.currentUser = User(
-            id: UUID(uuidString: user.id.uuidString) ?? UUID(),
-            handle: handle,
-            name: fullName,
-            email: user.email ?? "",
-            avatarUrl: avatarUrl,
-            bio: bio,
-            reputationScore: 0,
-            homeRegion: "",
-            roles: isGuest ? [.guest] : [.user],
-            badges: [],
-            followersCount: 0,
-            followingCount: 0,
-            spotsCount: 0,
-            createdAt: user.createdAt,
-            updatedAt: user.updatedAt
-        )
-        
+        // Use the AppState method to handle the session properly
+        appState.handleExistingSession(session)
         isLoading = false
+        
+        // After successful auth, ensure profile has the correct display name
+        Task {
+            await updateProfileDisplayName(for: session)
+        }
+    }
+    
+    private func updateProfileDisplayName(for session: Session) async {
+        // Check if we have a name from the auth provider
+        let userMetadata = session.user.userMetadata
+        
+        // Try to extract the name from various possible fields
+        let possibleName = (userMetadata["full_name"]?.value as? String) ??
+                          (userMetadata["name"]?.value as? String) ??
+                          (userMetadata["display_name"]?.value as? String)
+        
+        if let name = possibleName, !name.isEmpty {
+            print("📝 Updating profile display_name from auth provider: \(name)")
+            
+            do {
+                // Check current profile display_name
+                struct ProfileCheck: Codable {
+                    let id: UUID
+                    let username: String?
+                    let display_name: String?
+                }
+                
+                let profile: ProfileCheck? = try? await supabase
+                    .from("profiles")
+                    .select("id, username, display_name")
+                    .eq("id", value: session.user.id.uuidString)
+                    .single()
+                    .execute()
+                    .value
+                
+                // Only update if display_name is empty or same as username
+                if let profile = profile,
+                   (profile.display_name?.isEmpty ?? true || 
+                    profile.display_name?.lowercased() == profile.username?.lowercased()) {
+                    
+                    try await supabase
+                        .from("profiles")
+                        .update(["display_name": name])
+                        .eq("id", value: session.user.id.uuidString)
+                        .execute()
+                    
+                    print("✅ Profile display_name updated successfully")
+                }
+            } catch {
+                print("❌ Failed to update profile display_name: \(error)")
+            }
+        }
     }
     
     private func showAuthError(_ message: String) {

@@ -35,11 +35,22 @@ CREATE TABLE IF NOT EXISTS public.profiles (
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS trigger AS $$
 BEGIN
-    INSERT INTO public.profiles (id, username, display_name)
+    INSERT INTO public.profiles (id, username, display_name, avatar_url)
     VALUES (
         new.id,
-        COALESCE(new.raw_user_meta_data->>'username', split_part(new.email, '@', 1)),
-        COALESCE(new.raw_user_meta_data->>'display_name', split_part(new.email, '@', 1))
+        COALESCE(
+            new.raw_user_meta_data->>'username',
+            new.raw_user_meta_data->>'preferred_username',
+            split_part(new.email, '@', 1),
+            'user_' || substr(new.id::text, 1, 8)
+        ),
+        COALESCE(
+            new.raw_user_meta_data->>'display_name',
+            new.raw_user_meta_data->>'full_name',
+            new.raw_user_meta_data->>'name',
+            split_part(new.email, '@', 1)
+        ),
+        new.raw_user_meta_data->>'avatar_url'
     );
     RETURN new;
 END;
