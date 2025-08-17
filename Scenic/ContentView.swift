@@ -3,9 +3,15 @@ import SwiftUI
 struct ContentView: View {
     @EnvironmentObject var appState: AppState
     @State private var selectedTab: AppTab = .home
+    @State private var showTestView = false // Set to true to test connections
     
     var body: some View {
-        TabView(selection: $selectedTab) {
+        if showTestView {
+            TestConnectionView()
+        } else if !appState.isAuthenticated {
+            AuthenticationView()
+        } else {
+            TabView(selection: $selectedTab) {
             HomeView()
                 .tabItem {
                     Label("Home", systemImage: "house.fill")
@@ -35,8 +41,9 @@ struct ContentView: View {
                     Label("Profile", systemImage: "person.fill")
                 }
                 .tag(AppTab.profile)
+            }
+            .tint(.green)
         }
-        .tint(.green)
     }
 }
 

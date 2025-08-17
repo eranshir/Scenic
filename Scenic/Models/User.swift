@@ -18,6 +18,7 @@ struct User: Identifiable, Codable {
     var updatedAt: Date
     
     enum UserRole: String, Codable {
+        case guest
         case user
         case moderator
         case admin

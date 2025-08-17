@@ -1,0 +1,60 @@
+# Xcode
+xcuserdata/
+*.xcscmblueprint
+*.xccheckout
+build/
+DerivedData/
+*.moved-aside
+*.pbxuser
+\!default.pbxuser
+*.mode1v3
+\!default.mode1v3
+*.mode2v3
+\!default.mode2v3
+*.perspectivev3
+\!default.perspectivev3
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
+timeline.xctimeline
+playground.xcworkspace
+.build/
+
+# Dependencies
+Carthage/Build/
+Dependencies/
+.accio/
+Pods/
+
+# Environment and Secrets - IMPORTANT: Do not commit API keys\!
+.env
+.env.local
+Config/Secrets.swift
+Scenic/Configuration/Config.swift
+
+# Apple Developer Keys - NEVER commit these\!
+*.p8
+*.p12
+*.mobileprovision
+AuthKey_*.p8
+
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+venv/
+*.egg-info/
+
+# Scraped data
+scripts/geograph_photos/
+scripts/test_geograph_html/
+scripts/geograph_test_stats/
+scripts/scraped_photos/
+scripts/test_scrape/
+scripts/geograph_collection/
+
+# Test data
+Scenic/documents/spots/

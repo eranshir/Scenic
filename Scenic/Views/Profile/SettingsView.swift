@@ -2,11 +2,13 @@ import SwiftUI
 
 struct SettingsView: View {
     @Environment(\.dismiss) var dismiss
+    @EnvironmentObject var appState: AppState
     @EnvironmentObject var spotDataService: SpotDataService
     @AppStorage("useMetricUnits") private var useMetricUnits = true
     @AppStorage("downloadOverCellular") private var downloadOverCellular = false
     @AppStorage("autoBackup") private var autoBackup = true
     @State private var showingClearConfirmation = false
+    @State private var showingSignOutConfirmation = false
     
     var body: some View {
         NavigationStack {
@@ -115,9 +117,22 @@ struct SettingsView: View {
                 }
                 
                 Section {
+                    Button(action: { showingSignOutConfirmation = true }) {
+                        HStack {
+                            Spacer()
+                            Text("Sign Out")
+                                .foregroundColor(.red)
+                            Spacer()
+                        }
+                    }
+                    
                     Button(action: {}) {
-                        Text("Delete Account")
-                            .foregroundColor(.red)
+                        HStack {
+                            Spacer()
+                            Text("Delete Account")
+                                .foregroundColor(.red)
+                            Spacer()
+                        }
                     }
                 }
             }
@@ -137,6 +152,15 @@ struct SettingsView: View {
                 Button("Cancel", role: .cancel) { }
             } message: {
                 Text("This will permanently delete all spots and cached photos. This cannot be undone.")
+            }
+            .confirmationDialog("Sign Out", isPresented: $showingSignOutConfirmation) {
+                Button("Sign Out", role: .destructive) {
+                    appState.signOut()
+                    dismiss()
+                }
+                Button("Cancel", role: .cancel) { }
+            } message: {
+                Text("Are you sure you want to sign out?")
             }
         }
     }

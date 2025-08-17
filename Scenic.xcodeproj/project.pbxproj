@@ -6,6 +6,16 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		05C0F32B2E51239F008CF682 /* Auth in Frameworks */ = {isa = PBXBuildFile; productRef = 05C0F32A2E51239F008CF682 /* Auth */; };
+		05C0F32D2E51239F008CF682 /* Functions in Frameworks */ = {isa = PBXBuildFile; productRef = 05C0F32C2E51239F008CF682 /* Functions */; };
+		05C0F32F2E51239F008CF682 /* PostgREST in Frameworks */ = {isa = PBXBuildFile; productRef = 05C0F32E2E51239F008CF682 /* PostgREST */; };
+		05C0F3312E51239F008CF682 /* Realtime in Frameworks */ = {isa = PBXBuildFile; productRef = 05C0F3302E51239F008CF682 /* Realtime */; };
+		05C0F3332E51239F008CF682 /* Storage in Frameworks */ = {isa = PBXBuildFile; productRef = 05C0F3322E51239F008CF682 /* Storage */; };
+		05C0F3362E5123D5008CF682 /* Cloudinary in Frameworks */ = {isa = PBXBuildFile; productRef = 05C0F3352E5123D5008CF682 /* Cloudinary */; };
+		05C0F33B2E51C253008CF682 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = 05C0F33A2E51C253008CF682 /* Supabase */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		056C8FDD2E4FEBB400D746BA /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -64,6 +74,7 @@
 				documents/Scenic_Project_Plan.md,
 				documents/Scenic_Prototype_Project_Plan.md,
 				documents/Scenic_UX_Screens.md,
+				Info.plist,
 				QUICK_SETUP.md,
 				Scenic/Info.plist,
 				ScenicDataModel.md,
@@ -99,6 +110,13 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				05C0F33B2E51C253008CF682 /* Supabase in Frameworks */,
+				05C0F32F2E51239F008CF682 /* PostgREST in Frameworks */,
+				05C0F32D2E51239F008CF682 /* Functions in Frameworks */,
+				05C0F3362E5123D5008CF682 /* Cloudinary in Frameworks */,
+				05C0F32B2E51239F008CF682 /* Auth in Frameworks */,
+				05C0F3332E51239F008CF682 /* Storage in Frameworks */,
+				05C0F3312E51239F008CF682 /* Realtime in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -125,6 +143,7 @@
 				056C8FD12E4FEBB300D746BA /* Scenic */,
 				056C8FDF2E4FEBB400D746BA /* ScenicTests */,
 				056C8FE92E4FEBB400D746BA /* ScenicUITests */,
+				05C0F3392E51C253008CF682 /* Frameworks */,
 				056C8FD02E4FEBB300D746BA /* Products */,
 			);
 			sourceTree = "<group>";
@@ -137,6 +156,13 @@
 				056C8FE62E4FEBB400D746BA /* ScenicUITests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		05C0F3392E51C253008CF682 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -159,6 +185,13 @@
 			);
 			name = Scenic;
 			packageProductDependencies = (
+				05C0F32A2E51239F008CF682 /* Auth */,
+				05C0F32C2E51239F008CF682 /* Functions */,
+				05C0F32E2E51239F008CF682 /* PostgREST */,
+				05C0F3302E51239F008CF682 /* Realtime */,
+				05C0F3322E51239F008CF682 /* Storage */,
+				05C0F3352E5123D5008CF682 /* Cloudinary */,
+				05C0F33A2E51C253008CF682 /* Supabase */,
 			);
 			productName = Scenic;
 			productReference = 056C8FCF2E4FEBB300D746BA /* Scenic.app */;
@@ -242,6 +275,10 @@
 			);
 			mainGroup = 056C8FC62E4FEBB300D746BA;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				05C0F3292E51239F008CF682 /* XCRemoteSwiftPackageReference "supabase-swift" */,
+				05C0F3342E5123D5008CF682 /* XCRemoteSwiftPackageReference "cloudinary_ios" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 056C8FD02E4FEBB300D746BA /* Products */;
 			projectDirPath = "";
@@ -443,11 +480,13 @@
 				ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES = "";
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Scenic/Scenic.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 55VJA96VBJ;
+				DEVELOPMENT_TEAM = 4HWX97H9Z2;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Scenic/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -458,7 +497,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = shirfamily.com.Scenic;
+				PRODUCT_BUNDLE_IDENTIFIER = World.Scenic;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -471,11 +510,13 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Scenic/Scenic.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 55VJA96VBJ;
+				DEVELOPMENT_TEAM = 4HWX97H9Z2;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Scenic/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -486,7 +527,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = shirfamily.com.Scenic;
+				PRODUCT_BUNDLE_IDENTIFIER = World.Scenic;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -606,6 +647,63 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		05C0F3292E51239F008CF682 /* XCRemoteSwiftPackageReference "supabase-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/supabase/supabase-swift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.5.1;
+			};
+		};
+		05C0F3342E5123D5008CF682 /* XCRemoteSwiftPackageReference "cloudinary_ios" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/cloudinary/cloudinary_ios";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 5.2.3;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		05C0F32A2E51239F008CF682 /* Auth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 05C0F3292E51239F008CF682 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Auth;
+		};
+		05C0F32C2E51239F008CF682 /* Functions */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 05C0F3292E51239F008CF682 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Functions;
+		};
+		05C0F32E2E51239F008CF682 /* PostgREST */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 05C0F3292E51239F008CF682 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = PostgREST;
+		};
+		05C0F3302E51239F008CF682 /* Realtime */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 05C0F3292E51239F008CF682 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Realtime;
+		};
+		05C0F3322E51239F008CF682 /* Storage */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 05C0F3292E51239F008CF682 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Storage;
+		};
+		05C0F3352E5123D5008CF682 /* Cloudinary */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 05C0F3342E5123D5008CF682 /* XCRemoteSwiftPackageReference "cloudinary_ios" */;
+			productName = Cloudinary;
+		};
+		05C0F33A2E51C253008CF682 /* Supabase */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 05C0F3292E51239F008CF682 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Supabase;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 056C8FC72E4FEBB300D746BA /* Project object */;
 }

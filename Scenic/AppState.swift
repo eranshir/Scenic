@@ -1,6 +1,7 @@
 import Foundation
 import SwiftUI
 import Combine
+import Supabase
 
 class AppState: ObservableObject {
     @Published var currentUser: User?
@@ -18,29 +19,64 @@ class AppState: ObservableObject {
     @Published var mapRegion: MapRegion?
     
     init() {
-        loadMockData()
+        // Check for existing session on app launch
+        checkExistingSession()
     }
     
-    private func loadMockData() {
+    private func checkExistingSession() {
+        Task {
+            // Check if user has an existing Supabase session
+            if let session = try? await supabase.auth.session {
+                await MainActor.run {
+                    handleExistingSession(session)
+                }
+            } else {
+                // No existing session, show auth screen
+                await MainActor.run {
+                    isAuthenticated = false
+                }
+            }
+        }
+    }
+    
+    func handleExistingSession(_ session: Session) {
+        isAuthenticated = true
+        
+        let user = session.user
+        
+        // Extract metadata values properly
+        let handle = (user.userMetadata["handle"]?.value as? String) ?? user.email?.components(separatedBy: "@").first ?? "user"
+        let fullName = (user.userMetadata["full_name"]?.value as? String) ?? "User"
+        let avatarUrl = user.userMetadata["avatar_url"]?.value as? String
+        let bio = (user.userMetadata["bio"]?.value as? String) ?? ""
+        
         currentUser = User(
-            id: UUID(),
-            handle: "photographer",
-            name: "Demo User",
-            email: "demo@scenic.app",
-            avatarUrl: nil,
-            bio: "Landscape photography enthusiast",
-            reputationScore: 100,
-            homeRegion: "San Francisco Bay Area",
+            id: UUID(uuidString: user.id.uuidString) ?? UUID(),
+            handle: handle,
+            name: fullName,
+            email: user.email ?? "",
+            avatarUrl: avatarUrl,
+            bio: bio,
+            reputationScore: 0,
+            homeRegion: "",
             roles: [.user],
             badges: [],
-            followersCount: 42,
-            followingCount: 28,
-            spotsCount: 15,
-            createdAt: Date(),
-            updatedAt: Date()
+            followersCount: 0,
+            followingCount: 0,
+            spotsCount: 0,
+            createdAt: user.createdAt,
+            updatedAt: user.updatedAt
         )
-        
-        isAuthenticated = true
+    }
+    
+    func signOut() {
+        Task {
+            try? await supabase.auth.signOut()
+            await MainActor.run {
+                isAuthenticated = false
+                currentUser = nil
+            }
+        }
     }
 }
 
