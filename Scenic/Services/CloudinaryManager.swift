@@ -8,7 +8,7 @@ class CloudinaryManager: ObservableObject {
     static let shared = CloudinaryManager()
     
     private let cloudinary: CLDCloudinary
-    private let uploadPreset = "scenic_mobile"
+    private let uploadPreset: String? = nil // Removed preset - using signed upload instead
     private let maxFileSize: Int64 = 50 * 1024 * 1024 // 50MB
     
     private init() {
@@ -44,18 +44,16 @@ class CloudinaryManager: ObservableObject {
         let publicId = "spots/\(spotId)/\(UUID().uuidString)_\(timestamp)"
         
         return try await withCheckedThrowingContinuation { continuation in
-            cloudinary.createUploader().upload(
+            // Using signed upload (no preset needed)
+            let params = CLDUploadRequestParams()
+                .setPublicId(publicId)
+                .setFolder("scenic/spots/\(spotId)")
+                .setTags(["scenic", "spot:\(spotId)", "mobile"])
+                .setResourceType(.image)
+            
+            cloudinary.createUploader().signedUpload(
                 data: imageData,
-                uploadPreset: uploadPreset,
-                params: CLDUploadRequestParams()
-                    .setPublicId(publicId)
-                    .setFolder("scenic/spots/\(spotId)")
-                    .setTags(["scenic", "spot:\(spotId)", "mobile"])
-                    .setResourceType(.image)
-                    .setColors(true)
-                    .setFaces(true)
-                    .setMediaMetadata(true)
-                    .setPhash(true),
+                params: params,
                 progress: { progressData in
                     let percentage = Double(progressData.completedUnitCount) / Double(progressData.totalUnitCount)
                     progress?(percentage)

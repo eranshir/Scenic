@@ -17,6 +17,19 @@ class SpotDataService: ObservableObject {
     init(persistenceController: PersistenceController = PersistenceController.shared) {
         self.persistenceController = persistenceController
         loadSpots()
+        
+        // Listen for sync completion notifications
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleSpotsDidSync),
+            name: .spotsDidSync,
+            object: nil
+        )
+    }
+    
+    @objc private func handleSpotsDidSync() {
+        print("📨 Received spotsDidSync notification, reloading spots...")
+        loadSpots()
     }
     
     // MARK: - Spot Operations

@@ -6,15 +6,19 @@ struct MapView: View {
     @EnvironmentObject var spotDataService: SpotDataService
     @Binding var selectedSpotId: UUID?
     @Binding var mapCameraPosition: MapCameraPosition
+    @State private var showingSpotDetail = false
+    
+    private var selectedSpot: Spot? {
+        guard let selectedId = selectedSpotId else { return nil }
+        return spotDataService.spots.first { $0.id == selectedId }
+    }
     
     var body: some View {
         Map(position: $mapCameraPosition, interactionModes: .all, selection: $selectedSpotId) {
             ForEach(spotDataService.spots.isEmpty ? mockSpots : spotDataService.spots) { spot in
-                Annotation(spot.title, coordinate: spot.location) {
-                    NavigationLink(destination: SpotDetailView(spot: spot)) {
-                        SpotMapPin(spot: spot, isSelected: selectedSpotId == spot.id)
-                    }
-                }
+                Marker(spot.title, coordinate: spot.location)
+                    .tint(.green)
+                    .tag(spot.id)
             }
             
             UserAnnotation()
@@ -24,6 +28,27 @@ struct MapView: View {
             MapUserLocationButton()
             MapCompass()
             MapScaleView()
+        }
+        .onChange(of: selectedSpotId) { oldValue, newValue in
+            if newValue != nil {
+                showingSpotDetail = true
+            }
+        }
+        .sheet(isPresented: $showingSpotDetail) {
+            if let spot = selectedSpot {
+                NavigationStack {
+                    SpotDetailView(spot: spot)
+                        .navigationBarTitleDisplayMode(.inline)
+                        .toolbar {
+                            ToolbarItem(placement: .navigationBarTrailing) {
+                                Button("Done") {
+                                    showingSpotDetail = false
+                                    selectedSpotId = nil
+                                }
+                            }
+                        }
+                }
+            }
         }
     }
 }
@@ -52,7 +77,7 @@ struct SpotMapPin: View {
 
 struct SpotPreviewCard: View {
     let spot: Spot
-    @State private var showDetail = false
+    let onTap: () -> Void
     
     var body: some View {
         VStack(spacing: 0) {
@@ -92,7 +117,7 @@ struct SpotPreviewCard: View {
                 
                 Spacer()
                 
-                NavigationLink(destination: SpotDetailView(spot: spot)) {
+                Button(action: onTap) {
                     Image(systemName: "arrow.right.circle.fill")
                         .font(.title2)
                         .foregroundColor(.green)

@@ -51,6 +51,15 @@ struct DiscoverFeedCard: View {
         return baseHeight + variation
     }
     
+    // Check if spot is synced to cloud
+    private var isSynced: Bool {
+        // Check if all media have Cloudinary URLs (not local_)
+        let allMediaSynced = spot.media.allSatisfy { media in
+            !media.url.hasPrefix("local_")
+        }
+        return spot.media.isEmpty || allMediaSynced
+    }
+    
     var body: some View {
         ZStack(alignment: .bottom) {
             // Background photo - full bleed
@@ -130,6 +139,15 @@ struct DiscoverFeedCard: View {
                         }
                         
                         Spacer()
+                        
+                        // Sync status indicator
+                        Image(systemName: isSynced ? "checkmark.icloud.fill" : "icloud.and.arrow.up")
+                            .font(.caption)
+                            .foregroundColor(isSynced ? .green : .orange)
+                            .symbolEffect(.pulse, isActive: !isSynced)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 5)
+                            .background(.ultraThinMaterial.opacity(0.8), in: Capsule())
                         
                         // Engagement indicators
                         if spot.voteCount > 0 {

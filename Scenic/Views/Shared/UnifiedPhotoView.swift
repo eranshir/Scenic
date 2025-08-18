@@ -1,8 +1,8 @@
 import SwiftUI
 import UIKit
 
-/// Unified photo view that loads cached photos only
-/// All photos are stored in the local cache system
+/// Unified photo view that loads both cached and remote photos
+/// Handles local cached photos and Cloudinary URLs
 struct UnifiedPhotoView: View {
     let photoIdentifier: String
     let targetSize: CGSize
@@ -11,6 +11,32 @@ struct UnifiedPhotoView: View {
     @State private var image: UIImage?
     @State private var isLoading = true
     @State private var loadingError = false
+    
+    private var isRemoteURL: Bool {
+        photoIdentifier.hasPrefix("http://") || photoIdentifier.hasPrefix("https://")
+    }
+    
+    // Extract a cache key from Cloudinary URL or local identifier
+    private var cacheKey: String {
+        if isRemoteURL {
+            // Extract UUID from Cloudinary URL if possible
+            // Pattern: .../UUID_timestamp.jpg
+            if let url = URL(string: photoIdentifier),
+               let filename = url.lastPathComponent.split(separator: ".").first {
+                let parts = filename.split(separator: "_")
+                if parts.count >= 1 {
+                    // Return the UUID part (before the underscore)
+                    return String(parts[0])
+                }
+            }
+            // Fallback: use full URL as key
+            return photoIdentifier.replacingOccurrences(of: "/", with: "_")
+                                 .replacingOccurrences(of: ":", with: "_")
+                                 .replacingOccurrences(of: ".", with: "_")
+        } else {
+            return cleanPhotoIdentifier(photoIdentifier)
+        }
+    }
     
     init(photoIdentifier: String, targetSize: CGSize = CGSize(width: 400, height: 300), contentMode: ContentMode = .fill) {
         self.photoIdentifier = photoIdentifier
@@ -63,15 +89,28 @@ struct UnifiedPhotoView: View {
     private func loadPhoto() async {
         defer { isLoading = false }
         
-        print("🖼️ Loading cached photo: \(photoIdentifier)")
-        
+        // Always check local cache first
         let photoCache = PhotoCacheService.shared
-        let cleanedIdentifier = cleanPhotoIdentifier(photoIdentifier)
-        let filename = "\(cleanedIdentifier).jpg"
+        let filename = "\(cacheKey).jpg"
         
-        // Check if file exists first
-        let fileExists = photoCache.fileExists(filename: filename)
-        print("🔍 File exists check for \(filename): \(fileExists)")
+        // Check if we have it in cache
+        if photoCache.fileExists(filename: filename) {
+            print("🔄 Found in cache, loading locally: \(cacheKey)")
+            await loadCachedPhoto()
+        } else if isRemoteURL {
+            // Not in cache and it's a remote URL, download and cache it
+            print("⬇️ Not in cache, downloading from Cloudinary: \(photoIdentifier)")
+            await loadRemotePhotoAndCache()
+        } else {
+            // Local identifier but not in cache - try to load anyway
+            print("🖼️ Loading local photo: \(photoIdentifier)")
+            await loadCachedPhoto()
+        }
+    }
+    
+    private func loadCachedPhoto() async {
+        let photoCache = PhotoCacheService.shared
+        let filename = "\(cacheKey).jpg"
         
         let loadedImage = await photoCache.loadImage(from: filename, targetSize: targetSize)
         
@@ -79,11 +118,71 @@ struct UnifiedPhotoView: View {
             self.image = loadedImage
             self.loadingError = loadedImage == nil
             if loadedImage != nil {
-                print("✅ Successfully loaded cached photo: \(cleanedIdentifier)")
+                print("✅ Successfully loaded cached photo: \(self.cacheKey)")
             } else {
-                print("❌ Failed to load cached photo: \(filename) (file exists: \(fileExists))")
+                print("❌ Failed to load cached photo: \(filename)")
             }
         }
+    }
+    
+    private func loadRemotePhotoAndCache() async {
+        guard let url = URL(string: photoIdentifier) else {
+            print("❌ Invalid URL: \(photoIdentifier)")
+            DispatchQueue.main.async {
+                self.loadingError = true
+            }
+            return
+        }
+        
+        do {
+            let (data, _) = try await URLSession.shared.data(from: url)
+            if let loadedImage = UIImage(data: data) {
+                // Save to cache for future use
+                let photoCache = PhotoCacheService.shared
+                let filename = "\(cacheKey).jpg"
+                
+                if let imageData = loadedImage.jpegData(compressionQuality: 0.9) {
+                    await photoCache.saveImage(imageData, filename: filename)
+                    print("💾 Cached remote image: \(cacheKey)")
+                }
+                
+                // Resize image for performance
+                let resizedImage = resizeImage(loadedImage, targetSize: targetSize)
+                
+                DispatchQueue.main.async {
+                    self.image = resizedImage
+                    self.loadingError = false
+                    print("✅ Successfully loaded and cached remote photo from: \(url)")
+                }
+            } else {
+                throw NSError(domain: "UnifiedPhotoView", code: 1, userInfo: [NSLocalizedDescriptionKey: "Failed to decode image"])
+            }
+        } catch {
+            print("❌ Failed to load remote photo: \(error.localizedDescription)")
+            DispatchQueue.main.async {
+                self.loadingError = true
+            }
+        }
+    }
+    
+    private func resizeImage(_ image: UIImage, targetSize: CGSize) -> UIImage {
+        let size = image.size
+        let widthRatio  = targetSize.width  / size.width
+        let heightRatio = targetSize.height / size.height
+        
+        let newSize: CGSize
+        if widthRatio > heightRatio {
+            newSize = CGSize(width: size.width * heightRatio, height: size.height * heightRatio)
+        } else {
+            newSize = CGSize(width: size.width * widthRatio, height: size.height * widthRatio)
+        }
+        
+        UIGraphicsBeginImageContextWithOptions(newSize, false, 0.0)
+        image.draw(in: CGRect(origin: .zero, size: newSize))
+        let newImage = UIGraphicsGetImageFromCurrentImageContext()
+        UIGraphicsEndImageContext()
+        
+        return newImage ?? image
     }
     
     private func cleanPhotoIdentifier(_ identifier: String) -> String {

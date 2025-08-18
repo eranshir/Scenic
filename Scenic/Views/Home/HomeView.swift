@@ -10,6 +10,11 @@ struct HomeView: View {
     @State private var selectedSpotId: UUID?
     @State private var showSearchResults = false
     @State private var searchResults: [Spot] = []
+    @State private var showTestMenu = false
+    @State private var testResults = ""
+    @State private var isTestingServices = false
+    @State private var showSyncSheet = false
+    @StateObject private var syncService = SyncService.shared
     
     enum ViewMode {
         case map, list
@@ -19,7 +24,10 @@ struct HomeView: View {
         NavigationStack {
             ZStack {
                 if viewMode == .map {
-                    MapView(selectedSpotId: $selectedSpotId, mapCameraPosition: $mapCameraPosition)
+                    MapView(
+                        selectedSpotId: $selectedSpotId, 
+                        mapCameraPosition: $mapCameraPosition
+                    )
                 } else {
                     SpotListView()
                 }
@@ -33,8 +41,29 @@ struct HomeView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button(action: { showFilters.toggle() }) {
-                        Image(systemName: "line.3.horizontal.decrease.circle")
+                    HStack {
+                        Button(action: { showFilters.toggle() }) {
+                            Image(systemName: "line.3.horizontal.decrease.circle")
+                        }
+                        
+                        // Test button (only in debug mode)
+                        #if DEBUG
+                        Button(action: { showTestMenu.toggle() }) {
+                            Image(systemName: "hammer.fill")
+                                .foregroundColor(.orange)
+                        }
+                        #endif
+                        
+                        // Sync button
+                        Button(action: { 
+                            Task {
+                                await checkSyncStatusAndShow()
+                            }
+                        }) {
+                            Image(systemName: syncService.isSyncing ? "arrow.triangle.2.circlepath" : "icloud.and.arrow.up")
+                                .foregroundColor(syncService.isSyncing ? .blue : .green)
+                                .symbolEffect(.rotate, isActive: syncService.isSyncing)
+                        }
                     }
                 }
                 
@@ -49,6 +78,15 @@ struct HomeView: View {
             }
             .sheet(isPresented: $showFilters) {
                 FilterView()
+            }
+            .sheet(isPresented: $showTestMenu) {
+                BackendServiceTestView(
+                    isTestingServices: $isTestingServices,
+                    testResults: $testResults
+                )
+            }
+            .sheet(isPresented: $showSyncSheet) {
+                SyncStatusView()
             }
             .onTapGesture {
                 // Hide search results and keyboard when tapping outside
@@ -436,6 +474,16 @@ struct HomeView: View {
     
     private func hideKeyboard() {
         UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+    }
+    
+    private func checkSyncStatusAndShow() async {
+        let status = await syncService.checkSyncStatus()
+        if status.needsSync || !syncService.syncErrors.isEmpty {
+            showSyncSheet = true
+        } else {
+            // Start sync directly if nothing to show
+            await syncService.syncLocalSpotsToSupabase()
+        }
     }
 }
 

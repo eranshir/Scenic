@@ -13,6 +13,15 @@ struct SpotDetailView: View {
     @State private var showingNavigationOptions = false
     @State private var selectedLocation: CLLocationCoordinate2D?
     
+    // Computed property to check sync status
+    private var isSynced: Bool {
+        // Check if all media have Cloudinary URLs (not local_)
+        let allMediaSynced = spot.media.allSatisfy { media in
+            !media.url.hasPrefix("local_")
+        }
+        return spot.media.isEmpty || allMediaSynced
+    }
+    
     var body: some View {
         VStack(spacing: 0) {
             // Title section at the top
@@ -134,11 +143,20 @@ struct SpotDetailView: View {
     private var spotTitleSection: some View {
         HStack {
             VStack(alignment: .leading, spacing: 4) {
-                Text(spot.title)
-                    .font(.title)
-                    .fontWeight(.bold)
-                    .lineLimit(2)
-                    .multilineTextAlignment(.leading)
+                HStack(spacing: 8) {
+                    Text(spot.title)
+                        .font(.title)
+                        .fontWeight(.bold)
+                        .lineLimit(2)
+                        .multilineTextAlignment(.leading)
+                    
+                    // Sync status icon
+                    Image(systemName: isSynced ? "checkmark.icloud.fill" : "icloud.and.arrow.up")
+                        .font(.system(size: 18))
+                        .foregroundColor(isSynced ? .green : .orange)
+                        .symbolEffect(.pulse, isActive: !isSynced)
+                        .help(isSynced ? "Synced to cloud" : "Not yet synced")
+                }
                 
                 HStack(spacing: 8) {
                     Label(spot.difficulty.displayName, systemImage: spot.difficulty.icon)

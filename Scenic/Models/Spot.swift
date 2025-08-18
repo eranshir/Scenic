@@ -95,3 +95,14 @@ extension CLLocationCoordinate2D: Codable {
         self.init(latitude: latitude, longitude: longitude)
     }
 }
+
+// MARK: - Hashable conformance for navigation
+extension Spot: Hashable {
+    static func == (lhs: Spot, rhs: Spot) -> Bool {
+        lhs.id == rhs.id
+    }
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
+}

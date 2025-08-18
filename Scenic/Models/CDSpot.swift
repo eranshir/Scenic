@@ -17,6 +17,10 @@ extension CDSpot {
     @NSManaged public var title: String
     @NSManaged public var latitude: Double
     @NSManaged public var longitude: Double
+    
+    // Sync Properties (need to be added to Core Data model in Xcode)
+    // @NSManaged public var remoteId: UUID?
+    // @NSManaged public var syncedAt: Date?
     @NSManaged public var headingDegrees: Int16 // -1 means nil
     @NSManaged public var elevationMeters: Int16 // -1 means nil
     @NSManaged public var difficulty: Int16

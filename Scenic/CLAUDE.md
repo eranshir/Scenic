@@ -2,6 +2,14 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## CRITICAL RULES
+
+### Package Management
+- **NEVER** delete, remove, or modify Swift Package Manager dependencies in Xcode project files without explicit user approval
+- **NEVER** remove package references from project.pbxproj without consulting the user first
+- If package issues arise, suggest solutions but do not execute package removal
+- Always preserve existing package configurations unless explicitly instructed otherwise
+
 ## Project Overview
 
 Scenic is a crowdsourced photography platform for iOS that helps photographers discover optimal photo locations with detailed metadata including timing, sun position, weather conditions, and access logistics. The app unifies photo spot discovery, capture metadata, and social sharing for both hobbyist and professional photographers.

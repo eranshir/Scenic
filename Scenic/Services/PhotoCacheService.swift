@@ -184,6 +184,19 @@ class PhotoCacheService: ObservableObject {
         }
     }
     
+    // MARK: - Saving to Cache
+    
+    func saveImage(_ imageData: Data, filename: String) async {
+        let fileURL = cacheDirectory.appendingPathComponent(filename)
+        
+        do {
+            try imageData.write(to: fileURL)
+            print("💾 Saved image to cache: \(filename)")
+        } catch {
+            print("❌ Failed to save image to cache: \(error)")
+        }
+    }
+    
     // MARK: - Loading from Cache
     
     func loadImage(from filename: String, targetSize: CGSize = CGSize(width: 400, height: 400)) async -> UIImage? {

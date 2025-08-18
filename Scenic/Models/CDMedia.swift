@@ -17,6 +17,10 @@ extension CDMedia {
     @NSManaged public var type: String
     @NSManaged public var url: String
     @NSManaged public var thumbnailUrl: String?
+    
+    // Sync Properties (need to be added to Core Data model in Xcode)
+    // @NSManaged public var syncedAt: Date?
+    // @NSManaged public var cloudinaryPublicId: String?
     @NSManaged public var captureTimeUTC: Date?
     @NSManaged public var device: String?
     @NSManaged public var lens: String?
