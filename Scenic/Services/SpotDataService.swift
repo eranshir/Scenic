@@ -542,7 +542,11 @@ class SpotDataService: ObservableObject {
             filters: parseStringArray(cdMedia.filtersString),
             headingFromExif: cdMedia.headingFromExif,
             originalFilename: cdMedia.originalFilename,
-            createdAt: cdMedia.createdAt
+            createdAt: cdMedia.createdAt,
+            attributionText: cdMedia.responds(to: #selector(getter: CDMedia.attributionText)) ? cdMedia.attributionText : nil,
+            originalSource: cdMedia.responds(to: #selector(getter: CDMedia.originalSource)) ? cdMedia.originalSource : nil,
+            originalPhotoId: cdMedia.responds(to: #selector(getter: CDMedia.originalPhotoId)) ? cdMedia.originalPhotoId : nil,
+            licenseType: cdMedia.responds(to: #selector(getter: CDMedia.licenseType)) ? cdMedia.licenseType : nil
         )
     }
     
@@ -586,6 +590,20 @@ class SpotDataService: ObservableObject {
             cdMedia.exifHeight = Int32(exif.height ?? -1)
             cdMedia.exifColorSpace = exif.colorSpace
             cdMedia.exifSoftware = exif.software
+        }
+        
+        // Attribution and source information (only set if Core Data model supports it)
+        if cdMedia.responds(to: #selector(setter: CDMedia.attributionText)) {
+            cdMedia.attributionText = media.attributionText
+        }
+        if cdMedia.responds(to: #selector(setter: CDMedia.originalSource)) {
+            cdMedia.originalSource = media.originalSource
+        }
+        if cdMedia.responds(to: #selector(setter: CDMedia.originalPhotoId)) {
+            cdMedia.originalPhotoId = media.originalPhotoId
+        }
+        if cdMedia.responds(to: #selector(setter: CDMedia.licenseType)) {
+            cdMedia.licenseType = media.licenseType
         }
         
         cdMedia.isDownloaded = true
@@ -634,6 +652,20 @@ class SpotDataService: ObservableObject {
             cdMedia.exifSoftware = exif.software
         }
         
+        // Attribution and source information (only set if Core Data model supports it)
+        if cdMedia.responds(to: #selector(setter: CDMedia.attributionText)) {
+            cdMedia.attributionText = media.attributionText
+        }
+        if cdMedia.responds(to: #selector(setter: CDMedia.originalSource)) {
+            cdMedia.originalSource = media.originalSource
+        }
+        if cdMedia.responds(to: #selector(setter: CDMedia.originalPhotoId)) {
+            cdMedia.originalPhotoId = media.originalPhotoId
+        }
+        if cdMedia.responds(to: #selector(setter: CDMedia.licenseType)) {
+            cdMedia.licenseType = media.licenseType
+        }
+        
         cdMedia.isDownloaded = true
         cdMedia.thumbnailDownloaded = true
     }
@@ -649,7 +681,7 @@ class SpotDataService: ObservableObject {
         cdSunSnapshot.blueHourStartUTC = sunSnapshot.blueHourStartUTC
         cdSunSnapshot.blueHourEndUTC = sunSnapshot.blueHourEndUTC
         cdSunSnapshot.closestEventString = sunSnapshot.closestEvent?.rawValue
-        cdSunSnapshot.relativeMinutesToEvent = Int32(sunSnapshot.relativeMinutesToEvent ?? Int.max)
+        cdSunSnapshot.relativeMinutesToEvent = Int32(sunSnapshot.relativeMinutesToEvent ?? Int(Int32.max))
         return cdSunSnapshot
     }
     
@@ -663,7 +695,7 @@ class SpotDataService: ObservableObject {
         cdSunSnapshot.blueHourStartUTC = sunSnapshot.blueHourStartUTC
         cdSunSnapshot.blueHourEndUTC = sunSnapshot.blueHourEndUTC
         cdSunSnapshot.closestEventString = sunSnapshot.closestEvent?.rawValue
-        cdSunSnapshot.relativeMinutesToEvent = Int32(sunSnapshot.relativeMinutesToEvent ?? Int.max)
+        cdSunSnapshot.relativeMinutesToEvent = Int32(sunSnapshot.relativeMinutesToEvent ?? Int(Int32.max))
     }
     
     private func createCDWeatherSnapshotFromWeatherSnapshot(_ weatherSnapshot: WeatherSnapshot, in context: NSManagedObjectContext) -> CDWeatherSnapshot {
@@ -748,7 +780,7 @@ class SpotDataService: ObservableObject {
             blueHourStartUTC: cdSunSnapshot.blueHourStartUTC,
             blueHourEndUTC: cdSunSnapshot.blueHourEndUTC,
             closestEvent: cdSunSnapshot.closestEventString.flatMap { SunSnapshot.SolarEvent(rawValue: $0) },
-            relativeMinutesToEvent: cdSunSnapshot.relativeMinutesToEvent == Int32(Int.max) ? nil : Int(cdSunSnapshot.relativeMinutesToEvent)
+            relativeMinutesToEvent: cdSunSnapshot.relativeMinutesToEvent == Int32.max ? nil : Int(cdSunSnapshot.relativeMinutesToEvent)
         )
     }
     

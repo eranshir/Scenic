@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="22222" systemVersion="23A344" minimumToolsVersion="Automatic" sourceLanguage="Swift" usedWithSwiftData="YES" userDefinedModelVersionIdentifier="">
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="23788.4" systemVersion="24G84" minimumToolsVersion="Automatic" sourceLanguage="Swift" usedWithSwiftData="YES" userDefinedModelVersionIdentifier="">
     <entity name="CDAccessInfo" representedClassName="CDAccessInfo" syncable="YES">
         <attribute name="accessNotes" optional="YES" attributeType="String"/>
         <attribute name="estimatedWalkingMinutes" optional="YES" attributeType="Integer 16" defaultValueString="-1" usesScalarValueType="YES"/>
@@ -27,6 +27,7 @@
     </entity>
     <entity name="CDMedia" representedClassName="CDMedia" syncable="YES">
         <attribute name="aperture" optional="YES" attributeType="Float" defaultValueString="-1" usesScalarValueType="YES"/>
+        <attribute name="attributionText" optional="YES" attributeType="String"/>
         <attribute name="captureTimeUTC" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="createdAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="device" optional="YES" attributeType="String"/>
@@ -54,8 +55,11 @@
         <attribute name="iso" optional="YES" attributeType="Integer 32" defaultValueString="-1" usesScalarValueType="YES"/>
         <attribute name="lastSynced" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="lens" optional="YES" attributeType="String"/>
+        <attribute name="licenseType" optional="YES" attributeType="String"/>
         <attribute name="localFilePath" optional="YES" attributeType="String"/>
         <attribute name="originalFilename" optional="YES" attributeType="String"/>
+        <attribute name="originalPhotoId" optional="YES" attributeType="String"/>
+        <attribute name="originalSource" optional="YES" attributeType="String"/>
         <attribute name="presetsString" optional="YES" attributeType="String" defaultValueString="[]"/>
         <attribute name="resolutionHeight" optional="YES" attributeType="Integer 32" defaultValueString="-1" usesScalarValueType="YES"/>
         <attribute name="resolutionWidth" optional="YES" attributeType="Integer 32" defaultValueString="-1" usesScalarValueType="YES"/>
@@ -69,7 +73,11 @@
         <relationship name="spot" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="CDSpot" inverseName="media" inverseEntity="CDSpot"/>
     </entity>
     <entity name="CDSpot" representedClassName="CDSpot" syncable="YES">
+        <attribute name="administrativeArea" optional="YES" attributeType="String"/>
+        <attribute name="areasOfInterestString" optional="YES" attributeType="String"/>
         <attribute name="cacheExpiry" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="country" optional="YES" attributeType="String"/>
+        <attribute name="countryCode" optional="YES" attributeType="String"/>
         <attribute name="createdAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="createdBy" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="difficulty" optional="YES" attributeType="Integer 16" defaultValueString="3" usesScalarValueType="YES"/>
@@ -81,25 +89,21 @@
         <attribute name="lastSynced" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="latitude" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
         <attribute name="license" optional="YES" attributeType="String"/>
+        <attribute name="locality" optional="YES" attributeType="String"/>
+        <attribute name="locationName" optional="YES" attributeType="String"/>
         <attribute name="longitude" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="postalCode" optional="YES" attributeType="String"/>
         <attribute name="privacy" optional="YES" attributeType="String" defaultValueString="public"/>
         <attribute name="serverSpotId" optional="YES" attributeType="String"/>
         <attribute name="status" optional="YES" attributeType="String" defaultValueString="active"/>
+        <attribute name="subAdministrativeArea" optional="YES" attributeType="String"/>
         <attribute name="subjectTagsString" optional="YES" attributeType="String" defaultValueString="[]"/>
+        <attribute name="subLocality" optional="YES" attributeType="String"/>
+        <attribute name="subThoroughfare" optional="YES" attributeType="String"/>
+        <attribute name="thoroughfare" optional="YES" attributeType="String"/>
         <attribute name="title" optional="YES" attributeType="String"/>
         <attribute name="updatedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="voteCount" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
-        <attribute name="country" optional="YES" attributeType="String"/>
-        <attribute name="countryCode" optional="YES" attributeType="String"/>
-        <attribute name="administrativeArea" optional="YES" attributeType="String"/>
-        <attribute name="subAdministrativeArea" optional="YES" attributeType="String"/>
-        <attribute name="locality" optional="YES" attributeType="String"/>
-        <attribute name="subLocality" optional="YES" attributeType="String"/>
-        <attribute name="thoroughfare" optional="YES" attributeType="String"/>
-        <attribute name="subThoroughfare" optional="YES" attributeType="String"/>
-        <attribute name="postalCode" optional="YES" attributeType="String"/>
-        <attribute name="locationName" optional="YES" attributeType="String"/>
-        <attribute name="areasOfInterestString" optional="YES" attributeType="String"/>
         <relationship name="accessInfo" optional="YES" maxCount="1" deletionRule="Cascade" destinationEntity="CDAccessInfo" inverseName="spot" inverseEntity="CDAccessInfo"/>
         <relationship name="comments" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="CDComment" inverseName="spot" inverseEntity="CDComment"/>
         <relationship name="media" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="CDMedia" inverseName="spot" inverseEntity="CDMedia"/>

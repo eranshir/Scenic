@@ -67,7 +67,15 @@ extension CDSpot {
 extension CDSpot {
     var location: CLLocationCoordinate2D {
         get {
-            CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
+            let coord = CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
+            // Debug NaN coordinates
+            if coord.latitude.isNaN || coord.longitude.isNaN {
+                print("❌ DEBUG: CDSpot '\(title)' has NaN coordinates:")
+                print("  Raw latitude: \(latitude)")
+                print("  Raw longitude: \(longitude)")
+                print("  Coordinate: \(coord)")
+            }
+            return coord
         }
         set {
             latitude = newValue.latitude

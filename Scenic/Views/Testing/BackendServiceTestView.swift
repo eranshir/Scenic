@@ -320,6 +320,18 @@ struct BackendServiceTestView: View {
                 }
             }
             
+            TestSection(title: "Sync Operations") {
+                VStack(spacing: 8) {
+                    TestButton(title: "Sync Down Remote Spots", icon: "arrow.down.circle") {
+                        await testSyncDownRemoteSpots()
+                    }
+                    
+                    TestButton(title: "Sync Up Local Spots", icon: "arrow.up.circle") {
+                        await testSyncUpLocalSpots()
+                    }
+                }
+            }
+            
             TestSection(title: "Performance Tests") {
                 VStack(spacing: 8) {
                     TestButton(title: "Upload 10 Images", icon: "speedometer") {
@@ -1168,6 +1180,36 @@ struct BackendServiceTestView: View {
         // This would require mocking network conditions
         logInfo("Network failure test would require airplane mode or network conditioner")
         logInfo("Try: Settings > Developer > Network Link Conditioner > 100% Loss")
+        
+        isTestingServices = false
+    }
+    
+    private func testSyncDownRemoteSpots() async {
+        isTestingServices = true
+        logInfo("Starting sync down test - fetching remote spots...")
+        
+        do {
+            await SyncService.shared.syncRemoteSpotsToLocal()
+            logSuccess("✓ Sync down completed successfully!")
+            logInfo("Check the log for details on synced spots")
+        } catch {
+            logError("Sync down failed: \(error.localizedDescription)")
+        }
+        
+        isTestingServices = false
+    }
+    
+    private func testSyncUpLocalSpots() async {
+        isTestingServices = true
+        logInfo("Starting sync up test - uploading local spots...")
+        
+        do {
+            await SyncService.shared.syncLocalSpotsToSupabase()
+            logSuccess("✓ Sync up completed successfully!")
+            logInfo("Check the log for details on uploaded spots")
+        } catch {
+            logError("Sync up failed: \(error.localizedDescription)")
+        }
         
         isTestingServices = false
     }

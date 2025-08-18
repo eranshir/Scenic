@@ -15,7 +15,7 @@ extension CDSunSnapshot {
             blueHourStartUTC: self.blueHourStartUTC,
             blueHourEndUTC: self.blueHourEndUTC,
             closestEvent: self.closestEventString.flatMap { SunSnapshot.SolarEvent(rawValue: $0) },
-            relativeMinutesToEvent: self.relativeMinutesToEvent == Int32(Int.max) ? nil : Int(self.relativeMinutesToEvent)
+            relativeMinutesToEvent: self.relativeMinutesToEvent == Int32.max ? nil : Int(self.relativeMinutesToEvent)
         )
     }
     
@@ -35,6 +35,6 @@ extension CDSunSnapshot {
         self.blueHourStartUTC = sunSnapshot.blueHourStartUTC
         self.blueHourEndUTC = sunSnapshot.blueHourEndUTC
         self.closestEventString = sunSnapshot.closestEvent?.rawValue
-        self.relativeMinutesToEvent = Int32(sunSnapshot.relativeMinutesToEvent ?? Int.max)
+        self.relativeMinutesToEvent = Int32(sunSnapshot.relativeMinutesToEvent ?? Int(Int32.max))
     }
 }

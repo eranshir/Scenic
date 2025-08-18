@@ -1,0 +1,22 @@
+{
+  "name": "scenic-flickr-import",
+  "version": "1.0.0",
+  "description": "Bulk import script for Flickr photos into Scenic app",
+  "main": "flickr-bulk-import.js",
+  "scripts": {
+    "import": "node flickr-bulk-import.js",
+    "import:dry-run": "node flickr-bulk-import.js --dry-run",
+    "import:small-batch": "node flickr-bulk-import.js --batch-size=5",
+    "test": "node flickr-bulk-import.js --dry-run --batch-size=2"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.4",
+    "cloudinary": "^1.41.3",
+    "dotenv": "^17.2.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "author": "Scenic Team",
+  "license": "MIT"
+}

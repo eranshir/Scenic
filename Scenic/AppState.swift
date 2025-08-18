@@ -36,9 +36,7 @@ class AppState: ObservableObject {
         Task {
             // Check if user has an existing Supabase session
             if let session = try? await supabase.auth.session {
-                await MainActor.run {
-                    handleExistingSession(session)
-                }
+                await handleExistingSession(session)
             } else {
                 // No existing session, show auth screen
                 await MainActor.run {
@@ -48,6 +46,7 @@ class AppState: ObservableObject {
         }
     }
     
+    @MainActor
     func handleExistingSession(_ session: Session) {
         isAuthenticated = true
         
@@ -120,6 +119,22 @@ class AppState: ObservableObject {
             createdAt: user.createdAt,
             updatedAt: user.updatedAt
         )
+        
+        // Start automatic sync down after successful authentication
+        startAutomaticSyncDown()
+    }
+    
+    @MainActor
+    private func startAutomaticSyncDown() {
+        print("🔄 Starting automatic sync down on app launch...")
+        
+        // Clear last sync time for testing
+        UserDefaults.standard.removeObject(forKey: "lastSyncDownTime")
+        
+        Task {
+            await SyncService.shared.syncRemoteSpotsToLocal()
+            print("✅ Automatic sync down completed")
+        }
     }
     
     func signOut() {

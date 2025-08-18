@@ -23,6 +23,12 @@ struct Media: Identifiable, Codable {
     var originalFilename: String?
     var createdAt: Date
     
+    // Attribution and source information
+    var attributionText: String?
+    var originalSource: String?
+    var originalPhotoId: String?
+    var licenseType: String?
+    
     enum MediaType: String, Codable {
         case photo
         case video

@@ -61,6 +61,12 @@ extension CDMedia {
     @NSManaged public var thumbnailDownloaded: Bool // Whether thumbnail is cached locally
     @NSManaged public var lastSynced: Date?
     
+    // Attribution and source information
+    @NSManaged public var attributionText: String?
+    @NSManaged public var originalSource: String?
+    @NSManaged public var originalPhotoId: String?
+    @NSManaged public var licenseType: String?
+    
     // Relationships
     @NSManaged public var spot: CDSpot?
 }

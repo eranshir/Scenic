@@ -232,9 +232,7 @@ struct AuthenticationView: View {
                             print("ℹ️ No name provided by Apple (subsequent sign-in)")
                         }
                         
-                        await MainActor.run {
-                            handleSuccessfulAuth(session: session)
-                        }
+                        await handleSuccessfulAuth(session: session)
                     } catch {
                         await MainActor.run {
                             showAuthError(error.localizedDescription)
@@ -296,9 +294,7 @@ struct AuthenticationView: View {
             do {
                 let session = try await supabase.auth.signInAnonymously()
                 
-                await MainActor.run {
-                    handleSuccessfulAuth(session: session, isGuest: true)
-                }
+                await handleSuccessfulAuth(session: session, isGuest: true)
             } catch {
                 print("Anonymous auth error: \(error)")
                 
@@ -330,15 +326,13 @@ struct AuthenticationView: View {
         }
     }
     
-    private func handleSuccessfulAuth(session: Session, isGuest: Bool = false) {
+    private func handleSuccessfulAuth(session: Session, isGuest: Bool = false) async {
         // Use the AppState method to handle the session properly
-        appState.handleExistingSession(session)
+        await appState.handleExistingSession(session)
         isLoading = false
         
         // After successful auth, ensure profile has the correct display name
-        Task {
-            await updateProfileDisplayName(for: session)
-        }
+        await updateProfileDisplayName(for: session)
     }
     
     private func updateProfileDisplayName(for session: Session) async {

@@ -347,6 +347,32 @@ struct SupabaseMedia: Codable {
     let type: String
     let width: Int?
     let height: Int?
+    let captureTimeUtc: String?
+    let attributionText: String?
+    let originalSource: String?
+    let originalPhotoId: String?
+    let licenseType: String?
+    let gpsLatitude: Double?
+    let gpsLongitude: Double?
+    
+    enum CodingKeys: String, CodingKey {
+        case id
+        case spotId = "spot_id"
+        case userId = "user_id"
+        case cloudinaryPublicId = "cloudinary_public_id"
+        case cloudinaryUrl = "cloudinary_url"
+        case cloudinarySecureUrl = "cloudinary_secure_url"
+        case type
+        case width
+        case height
+        case captureTimeUtc = "capture_time_utc"
+        case attributionText = "attribution_text"
+        case originalSource = "original_source"
+        case originalPhotoId = "original_photo_id"
+        case licenseType = "license_type"
+        case gpsLatitude = "gps_latitude"
+        case gpsLongitude = "gps_longitude"
+    }
 }
 
 struct SupabaseComment: Codable {

@@ -181,7 +181,7 @@ struct SpotDetailView: View {
         VStack(spacing: 0) {
             // Interactive map with both locations
             Map(initialPosition: .region(MKCoordinateRegion(
-                center: spot.location,
+                center: isValidCoordinate(spot.location) ? spot.location : CLLocationCoordinate2D(latitude: 37.7749, longitude: -122.4194),
                 span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
             ))) {
                 // Spot marker
@@ -464,10 +464,16 @@ struct EnhancedPhotoTimingAnalysis: View {
         let baseSunsetHour = 18.0 + seasonalOffset - latitudeOffset
         
         // Convert to actual times
-        let sunriseHour = max(0, min(23, Int(baseSunriseHour)))
-        let sunriseMinute = Int(abs(baseSunriseHour - Double(sunriseHour)) * 60)
-        let sunsetHour = max(0, min(23, Int(baseSunsetHour)))
-        let sunsetMinute = Int(abs(baseSunsetHour - Double(sunsetHour)) * 60)
+        // Validate values before conversion to prevent crashes
+        guard baseSunriseHour.isFinite && baseSunsetHour.isFinite else {
+            print("⚠️ Invalid sun calculation results (NaN/Infinity), skipping")
+            return
+        }
+        
+        let sunriseHour = max(0, min(23, Int(baseSunriseHour.rounded())))
+        let sunriseMinute = max(0, min(59, Int(abs(baseSunriseHour - Double(sunriseHour)) * 60)))
+        let sunsetHour = max(0, min(23, Int(baseSunsetHour.rounded())))
+        let sunsetMinute = max(0, min(59, Int(abs(baseSunsetHour - Double(sunsetHour)) * 60)))
         
         let sunrise = calendar.date(bySettingHour: sunriseHour, minute: sunriseMinute, second: 0, of: captureDate) ?? captureDate
         let sunset = calendar.date(bySettingHour: sunsetHour, minute: sunsetMinute, second: 0, of: captureDate) ?? captureDate
@@ -657,10 +663,16 @@ struct CompactPhotoTimingAnalysis: View {
         let baseSunsetHour = 18.0 + seasonalOffset - latitudeOffset
         
         // Convert to actual times
-        let sunriseHour = max(0, min(23, Int(baseSunriseHour)))
-        let sunriseMinute = Int(abs(baseSunriseHour - Double(sunriseHour)) * 60)
-        let sunsetHour = max(0, min(23, Int(baseSunsetHour)))
-        let sunsetMinute = Int(abs(baseSunsetHour - Double(sunsetHour)) * 60)
+        // Validate values before conversion to prevent crashes
+        guard baseSunriseHour.isFinite && baseSunsetHour.isFinite else {
+            print("⚠️ Invalid sun calculation results (NaN/Infinity), skipping")
+            return
+        }
+        
+        let sunriseHour = max(0, min(23, Int(baseSunriseHour.rounded())))
+        let sunriseMinute = max(0, min(59, Int(abs(baseSunriseHour - Double(sunriseHour)) * 60)))
+        let sunsetHour = max(0, min(23, Int(baseSunsetHour.rounded())))
+        let sunsetMinute = max(0, min(59, Int(abs(baseSunsetHour - Double(sunsetHour)) * 60)))
         
         let sunrise = calendar.date(bySettingHour: sunriseHour, minute: sunriseMinute, second: 0, of: captureDate) ?? captureDate
         let sunset = calendar.date(bySettingHour: sunsetHour, minute: sunsetMinute, second: 0, of: captureDate) ?? captureDate
@@ -2376,6 +2388,14 @@ struct PhotoMetadataCard: View {
                 if let device = media.device {
                     CopyableMetadataRow(label: "Device", value: device)
                 }
+                
+                if let attribution = media.attributionText {
+                    CopyableMetadataRow(label: "Attribution", value: attribution)
+                }
+                
+                if let license = media.licenseType {
+                    CopyableMetadataRow(label: "License", value: license)
+                }
             }
             .padding()
             .background(Color(.systemGray6))
@@ -2539,10 +2559,16 @@ struct TimingAnalysisCard: View {
         let baseSunsetHour = 18.0 + seasonalOffset - latitudeOffset
         
         // Convert to actual times
-        let sunriseHour = max(0, min(23, Int(baseSunriseHour)))
-        let sunriseMinute = Int(abs(baseSunriseHour - Double(sunriseHour)) * 60)
-        let sunsetHour = max(0, min(23, Int(baseSunsetHour)))
-        let sunsetMinute = Int(abs(baseSunsetHour - Double(sunsetHour)) * 60)
+        // Validate values before conversion to prevent crashes
+        guard baseSunriseHour.isFinite && baseSunsetHour.isFinite else {
+            print("⚠️ Invalid sun calculation results (NaN/Infinity), skipping")
+            return
+        }
+        
+        let sunriseHour = max(0, min(23, Int(baseSunriseHour.rounded())))
+        let sunriseMinute = max(0, min(59, Int(abs(baseSunriseHour - Double(sunriseHour)) * 60)))
+        let sunsetHour = max(0, min(23, Int(baseSunsetHour.rounded())))
+        let sunsetMinute = max(0, min(59, Int(abs(baseSunsetHour - Double(sunsetHour)) * 60)))
         
         let sunrise = calendar.date(bySettingHour: sunriseHour, minute: sunriseMinute, second: 0, of: captureDate) ?? captureDate
         let sunset = calendar.date(bySettingHour: sunsetHour, minute: sunsetMinute, second: 0, of: captureDate) ?? captureDate
@@ -2662,10 +2688,14 @@ struct LocationCard: View {
             
             // Mini map preview with navigation
             Map(initialPosition: .region(MKCoordinateRegion(
-                center: CLLocationCoordinate2D(latitude: latitude, longitude: longitude),
+                center: isValidCoordinate(CLLocationCoordinate2D(latitude: latitude, longitude: longitude)) ? 
+                    CLLocationCoordinate2D(latitude: latitude, longitude: longitude) : 
+                    CLLocationCoordinate2D(latitude: 37.7749, longitude: -122.4194),
                 span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
             ))) {
-                Marker("Photo Location", coordinate: CLLocationCoordinate2D(latitude: latitude, longitude: longitude))
+                Marker("Photo Location", coordinate: isValidCoordinate(CLLocationCoordinate2D(latitude: latitude, longitude: longitude)) ? 
+                    CLLocationCoordinate2D(latitude: latitude, longitude: longitude) : 
+                    CLLocationCoordinate2D(latitude: 37.7749, longitude: -122.4194))
                     .tint(.green)
             }
             .frame(height: 150)
@@ -2726,31 +2756,49 @@ struct LocationCard: View {
 struct CameraInfoCard: View {
     let media: Media
     
+    private var hasAnyData: Bool {
+        return media.exifData?.make != nil ||
+               media.exifData?.model != nil ||
+               media.lens != nil ||
+               media.exifData?.lens != nil ||
+               media.exifData?.software != nil
+    }
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Camera & Lens")
                 .font(.headline)
             
-            VStack(spacing: 8) {
-                if let make = media.exifData?.make {
-                    CopyableMetadataRow(label: "Make", value: make)
+            if hasAnyData {
+                VStack(spacing: 8) {
+                    if let make = media.exifData?.make {
+                        CopyableMetadataRow(label: "Make", value: make)
+                    }
+                    
+                    if let model = media.exifData?.model {
+                        CopyableMetadataRow(label: "Model", value: model)
+                    }
+                    
+                    if let lens = media.lens ?? media.exifData?.lens {
+                        CopyableMetadataRow(label: "Lens", value: lens)
+                    }
+                    
+                    if let software = media.exifData?.software {
+                        CopyableMetadataRow(label: "Software", value: software)
+                    }
                 }
-                
-                if let model = media.exifData?.model {
-                    CopyableMetadataRow(label: "Model", value: model)
-                }
-                
-                if let lens = media.lens ?? media.exifData?.lens {
-                    CopyableMetadataRow(label: "Lens", value: lens)
-                }
-                
-                if let software = media.exifData?.software {
-                    CopyableMetadataRow(label: "Software", value: software)
-                }
+                .padding()
+                .background(Color(.systemGray6))
+                .cornerRadius(10)
+            } else {
+                Text("No Camera & Lens information for this photo")
+                    .font(.footnote)
+                    .foregroundColor(.secondary)
+                    .padding()
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .background(Color(.systemGray6))
+                    .cornerRadius(10)
             }
-            .padding()
-            .background(Color(.systemGray6))
-            .cornerRadius(10)
         }
     }
 }
@@ -2758,35 +2806,53 @@ struct CameraInfoCard: View {
 struct CameraSettingsCard: View {
     let exifData: ExifData
     
+    private var hasAnyData: Bool {
+        return exifData.focalLength != nil ||
+               exifData.fNumber != nil ||
+               exifData.exposureTime != nil ||
+               exifData.iso != nil ||
+               exifData.colorSpace != nil
+    }
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Camera Settings")
                 .font(.headline)
             
-            VStack(spacing: 8) {
-                if let focalLength = exifData.focalLength {
-                    CopyableMetadataRow(label: "Focal Length", value: "\(Int(focalLength))mm")
+            if hasAnyData {
+                VStack(spacing: 8) {
+                    if let focalLength = exifData.focalLength {
+                        CopyableMetadataRow(label: "Focal Length", value: "\(Int(focalLength))mm")
+                    }
+                    
+                    if let aperture = exifData.fNumber {
+                        CopyableMetadataRow(label: "Aperture", value: "f/\(aperture)")
+                    }
+                    
+                    if let exposureTime = exifData.exposureTime {
+                        CopyableMetadataRow(label: "Shutter Speed", value: exposureTime)
+                    }
+                    
+                    if let iso = exifData.iso {
+                        CopyableMetadataRow(label: "ISO", value: String(iso))
+                    }
+                    
+                    if let colorSpace = exifData.colorSpace {
+                        CopyableMetadataRow(label: "Color Space", value: colorSpace)
+                    }
                 }
-                
-                if let aperture = exifData.fNumber {
-                    CopyableMetadataRow(label: "Aperture", value: "f/\(aperture)")
-                }
-                
-                if let exposureTime = exifData.exposureTime {
-                    CopyableMetadataRow(label: "Shutter Speed", value: exposureTime)
-                }
-                
-                if let iso = exifData.iso {
-                    CopyableMetadataRow(label: "ISO", value: String(iso))
-                }
-                
-                if let colorSpace = exifData.colorSpace {
-                    CopyableMetadataRow(label: "Color Space", value: colorSpace)
-                }
+                .padding()
+                .background(Color(.systemGray6))
+                .cornerRadius(10)
+            } else {
+                Text("No Camera Settings information for this photo")
+                    .font(.footnote)
+                    .foregroundColor(.secondary)
+                    .padding()
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .background(Color(.systemGray6))
+                    .cornerRadius(10)
             }
-            .padding()
-            .background(Color(.systemGray6))
-            .cornerRadius(10)
         }
     }
 }
@@ -3081,6 +3147,17 @@ struct ZoomablePhotoView: View {
             }
         }
     }
+}
+
+// MARK: - Helper Functions
+
+private func isValidCoordinate(_ coordinate: CLLocationCoordinate2D) -> Bool {
+    return !coordinate.latitude.isNaN && 
+           !coordinate.longitude.isNaN && 
+           coordinate.latitude.isFinite && 
+           coordinate.longitude.isFinite &&
+           abs(coordinate.latitude) <= 90 && 
+           abs(coordinate.longitude) <= 180
 }
 
 #Preview {

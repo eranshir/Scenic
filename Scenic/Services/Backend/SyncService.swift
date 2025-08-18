@@ -353,6 +353,372 @@ class SyncService: ObservableObject {
         try context.save()
         print("✅ Deleted local spot")
     }
+    
+    // MARK: - Sync Down (Remote to Local)
+    
+    /// Fetch remote spots from Supabase and store them locally
+    func syncRemoteSpotsToLocal() async {
+        guard !isSyncing else {
+            print("⚠️ Sync already in progress")
+            return
+        }
+        
+        // Rate limiting: Don't sync more than once every 5 minutes
+        let lastSyncKey = "lastSyncDownTime"
+        let minimumSyncInterval: TimeInterval = 5 * 60 // 5 minutes
+        
+        if let lastSyncTime = UserDefaults.standard.object(forKey: lastSyncKey) as? Date {
+            let timeSinceLastSync = Date().timeIntervalSince(lastSyncTime)
+            if timeSinceLastSync < minimumSyncInterval {
+                let remainingTime = minimumSyncInterval - timeSinceLastSync
+                print("⏱️ Sync down rate limited. Last sync was \(Int(timeSinceLastSync)) seconds ago. Please wait \(Int(remainingTime)) more seconds.")
+                return
+            }
+        }
+        
+        isSyncing = true
+        syncProgress = 0
+        syncStatus = "Fetching remote spots..."
+        syncErrors.removeAll()
+        
+        print("🔄 Starting sync down: Fetching remote spots from Supabase...")
+        
+        do {
+            // Fetch all public spots from Supabase
+            let remoteSpots = try await spotService.fetchSpots(limit: 1000)
+            
+            // Debug first few spots' coordinates
+            print("🗺️ DEBUG: First 3 remote spots coordinates:")
+            for (index, spot) in remoteSpots.prefix(3).enumerated() {
+                print("  [\(index)] \(spot.title): lat=\(spot.latitude), lng=\(spot.longitude)")
+                print("    Are finite: lat=\(spot.latitude.isFinite), lng=\(spot.longitude.isFinite)")
+                print("    Are NaN: lat=\(spot.latitude.isNaN), lng=\(spot.longitude.isNaN)")
+            }
+            
+            guard !remoteSpots.isEmpty else {
+                syncStatus = "No remote spots found"
+                isSyncing = false
+                print("ℹ️ No remote spots to sync")
+                return
+            }
+            
+            syncStatus = "Processing \(remoteSpots.count) remote spots..."
+            print("📥 Found \(remoteSpots.count) remote spots to sync")
+            
+            let context = persistenceController.container.viewContext
+            var newSpotsCount = 0
+            
+            for (index, remoteSpot) in remoteSpots.enumerated() {
+                syncProgress = Double(index) / Double(remoteSpots.count)
+                
+                do {
+                    // Check if spot already exists locally
+                    let request: NSFetchRequest<CDSpot> = CDSpot.fetchRequest()
+                    request.predicate = NSPredicate(format: "serverSpotId == %@", remoteSpot.id.uuidString)
+                    
+                    let existingSpots = try context.fetch(request)
+                    
+                    if existingSpots.isEmpty {
+                        // Create new local spot from remote data
+                        let cdSpot = createCDSpotFromRemoteSpot(remoteSpot, in: context)
+                        
+                        // Fetch and create media records for this spot
+                        await fetchAndCreateMediaForSpot(cdSpot, spotId: remoteSpot.id, in: context)
+                        
+                        // Fetch and create sun snapshots for this spot
+                        await fetchAndCreateSunSnapshotsForSpot(cdSpot, spotId: remoteSpot.id, in: context)
+                        
+                        newSpotsCount += 1
+                        print("➕ Created local spot: \(remoteSpot.title)")
+                    } else {
+                        let existingSpot = existingSpots[0]
+                        print("⏭️ Spot already exists locally: \(remoteSpot.title)")
+                        
+                        // Check if existing spot has invalid coordinates and fix them
+                        if existingSpot.latitude.isNaN || existingSpot.longitude.isNaN {
+                            print("🔧 Fixing NaN coordinates for existing spot: \(remoteSpot.title)")
+                            print("  Old coordinates: lat=\(existingSpot.latitude), lng=\(existingSpot.longitude)")
+                            if remoteSpot.latitude.isFinite && remoteSpot.longitude.isFinite {
+                                existingSpot.latitude = remoteSpot.latitude
+                                existingSpot.longitude = remoteSpot.longitude
+                                print("  New coordinates: lat=\(existingSpot.latitude), lng=\(existingSpot.longitude)")
+                            } else {
+                                print("  Using fallback coordinates")
+                                existingSpot.latitude = 37.7749
+                                existingSpot.longitude = -122.4194
+                            }
+                        }
+                        
+                        // Always fetch and update media for existing spots (to get enhanced metadata)
+                        print("📸 Updating existing spot media with enhanced metadata...")
+                        await fetchAndCreateMediaForSpot(existingSpot, spotId: remoteSpot.id, in: context)
+                        
+                        // Always sync sun snapshots for existing spots (they may have been added)
+                        await fetchAndCreateSunSnapshotsForSpot(existingSpot, spotId: remoteSpot.id, in: context)
+                    }
+                    
+                    syncStatus = "Processed \(index + 1) of \(remoteSpots.count) spots"
+                } catch {
+                    let errorMsg = "Failed to process remote spot '\(remoteSpot.title)': \(error.localizedDescription)"
+                    syncErrors.append(errorMsg)
+                    print("❌ \(errorMsg)")
+                }
+            }
+            
+            // Save all changes
+            try context.save()
+            syncProgress = 1.0
+            
+            if syncErrors.isEmpty {
+                syncStatus = "✅ Successfully synced \(newSpotsCount) new remote spots"
+                print("✅ Sync down completed: \(newSpotsCount) new spots added locally")
+            } else {
+                syncStatus = "⚠️ Synced with \(syncErrors.count) errors, added \(newSpotsCount) spots"
+                print("⚠️ Sync down completed with \(syncErrors.count) errors")
+            }
+            
+            // Record successful sync time for rate limiting
+            UserDefaults.standard.set(Date(), forKey: "lastSyncDownTime")
+            
+            // Post notification to reload spots
+            await MainActor.run {
+                NotificationCenter.default.post(name: .spotsDidSync, object: nil)
+                print("🔄 Posted notification to reload spots after sync down")
+            }
+            
+        } catch {
+            syncStatus = "❌ Sync down failed: \(error.localizedDescription)"
+            syncErrors.append(error.localizedDescription)
+            print("❌ Sync down failed: \(error)")
+        }
+        
+        isSyncing = false
+    }
+    
+    /// Create a CDSpot from a remote SpotModel
+    private func createCDSpotFromRemoteSpot(_ remoteSpot: SpotModel, in context: NSManagedObjectContext) -> CDSpot {
+        let cdSpot = CDSpot(context: context)
+        
+        cdSpot.id = remoteSpot.id
+        cdSpot.title = remoteSpot.title
+        // Note: CDSpot doesn't have a description field yet - skipping for now
+        // cdSpot.description = remoteSpot.description
+        // Debug coordinate values from remote spot
+        print("🗺️ DEBUG: Setting coordinates for '\(remoteSpot.title)':")
+        print("  Remote latitude: \(remoteSpot.latitude)")
+        print("  Remote longitude: \(remoteSpot.longitude)")
+        print("  Are finite: lat=\(remoteSpot.latitude.isFinite), lng=\(remoteSpot.longitude.isFinite)")
+        
+        // Add safeguard against NaN coordinates
+        if remoteSpot.latitude.isFinite && remoteSpot.longitude.isFinite {
+            cdSpot.latitude = remoteSpot.latitude
+            cdSpot.longitude = remoteSpot.longitude
+        } else {
+            print("❌ WARNING: Received non-finite coordinates for spot '\(remoteSpot.title)', using fallback")
+            cdSpot.latitude = 37.7749  // San Francisco fallback
+            cdSpot.longitude = -122.4194
+        }
+        
+        // Verify what was actually stored
+        print("  Stored latitude: \(cdSpot.latitude)")
+        print("  Stored longitude: \(cdSpot.longitude)")
+        print("  Location property: \(cdSpot.location)")
+        cdSpot.headingDegrees = Int16(remoteSpot.headingDegrees ?? -1) // -1 means nil
+        cdSpot.elevationMeters = Int16(remoteSpot.elevationMeters ?? -1) // -1 means nil
+        cdSpot.subjectTags = remoteSpot.subjectTags
+        cdSpot.difficulty = Int16(remoteSpot.difficulty)
+        cdSpot.createdBy = remoteSpot.createdBy
+        cdSpot.privacy = remoteSpot.privacy
+        cdSpot.license = remoteSpot.license
+        cdSpot.status = remoteSpot.status
+        cdSpot.voteCount = Int32(remoteSpot.voteCount)
+        cdSpot.createdAt = remoteSpot.createdAt
+        cdSpot.updatedAt = remoteSpot.updatedAt
+        cdSpot.serverSpotId = remoteSpot.id.uuidString // Mark as synced from server
+        cdSpot.isLocalOnly = false // These are remote spots
+        cdSpot.isPublished = true // Remote spots are already published
+        
+        return cdSpot
+    }
+    
+    /// Fetch media records from Supabase and create local CDMedia records
+    private func fetchAndCreateMediaForSpot(_ cdSpot: CDSpot, spotId: UUID, in context: NSManagedObjectContext) async {
+        do {
+            // Fetch media records for this spot from Supabase
+            let mediaRecords: [SupabaseMedia] = try await SupabaseManager.shared.client
+                .from("media")
+                .select("*")
+                .eq("spot_id", value: spotId.uuidString)
+                .execute()
+                .value
+            
+            print("📸 Found \(mediaRecords.count) media records for spot: \(cdSpot.title)")
+            
+            for mediaRecord in mediaRecords {
+                // Check if CDMedia record already exists
+                let existingMediaRequest: NSFetchRequest<CDMedia> = CDMedia.fetchRequest()
+                existingMediaRequest.predicate = NSPredicate(format: "id == %@", mediaRecord.id as CVarArg)
+                
+                let cdMedia: CDMedia
+                let existingMedia = try context.fetch(existingMediaRequest)
+                if let existing = existingMedia.first {
+                    // Update existing record with enhanced metadata
+                    cdMedia = existing
+                    print("🔄 Updating existing media record: \(mediaRecord.cloudinarySecureUrl)")
+                } else {
+                    // Create new CDMedia record
+                    cdMedia = CDMedia(context: context)
+                    cdMedia.id = mediaRecord.id
+                    cdMedia.createdAt = Date()
+                    print("🆕 Creating new media record: \(mediaRecord.cloudinarySecureUrl)")
+                }
+                
+                // Set/update all properties
+                cdMedia.userId = mediaRecord.userId
+                cdMedia.url = mediaRecord.cloudinarySecureUrl
+                cdMedia.thumbnailUrl = generateCloudinaryThumbnailUrl(publicId: mediaRecord.cloudinaryPublicId)
+                cdMedia.type = Media.MediaType.photo.rawValue
+                cdMedia.spot = cdSpot
+                
+                // Initialize all numeric fields with -1 (nil indicators) to prevent crashes
+                cdMedia.focalLengthMM = -1
+                cdMedia.aperture = -1
+                cdMedia.iso = -1
+                cdMedia.resolutionWidth = -1
+                cdMedia.resolutionHeight = -1
+                cdMedia.headingFromExif = false
+                
+                // Initialize EXIF fields
+                cdMedia.exifFocalLength = -1
+                cdMedia.exifFNumber = -1
+                cdMedia.exifIso = -1
+                // Use original GPS coordinates from media record (stored from Flickr photo GPS data)
+                cdMedia.exifGpsLatitude = mediaRecord.gpsLatitude ?? Double.nan
+                cdMedia.exifGpsLongitude = mediaRecord.gpsLongitude ?? Double.nan
+                cdMedia.exifGpsAltitude = Double.nan  // We don't have altitude data
+                cdMedia.exifGpsDirection = -1
+                cdMedia.exifWidth = -1
+                cdMedia.exifHeight = -1
+                
+                // Server sync properties
+                cdMedia.serverMediaId = mediaRecord.cloudinaryPublicId
+                cdMedia.isDownloaded = false  // Remote media not downloaded locally
+                cdMedia.thumbnailDownloaded = false
+                cdMedia.lastSynced = Date()
+                
+                // Initialize JSON string fields
+                cdMedia.presetsString = "[]"
+                cdMedia.filtersString = "[]"
+                
+                // Map enhanced metadata from SupabaseMedia
+                if let captureTimeString = mediaRecord.captureTimeUtc {
+                    cdMedia.captureTimeUTC = ISO8601DateFormatter().date(from: captureTimeString)
+                }
+                
+                // Map attribution and source information (only set if Core Data model supports it)
+                if cdMedia.responds(to: #selector(setter: CDMedia.attributionText)) {
+                    cdMedia.attributionText = mediaRecord.attributionText
+                }
+                if cdMedia.responds(to: #selector(setter: CDMedia.originalSource)) {
+                    cdMedia.originalSource = mediaRecord.originalSource
+                }
+                if cdMedia.responds(to: #selector(setter: CDMedia.originalPhotoId)) {
+                    cdMedia.originalPhotoId = mediaRecord.originalPhotoId
+                }
+                if cdMedia.responds(to: #selector(setter: CDMedia.licenseType)) {
+                    cdMedia.licenseType = mediaRecord.licenseType
+                }
+                
+                // Set dimensions if available (with bounds checking for Int32)
+                if let width = mediaRecord.width {
+                    cdMedia.resolutionWidth = width > Int32.max ? Int32.max : Int32(width)
+                }
+                if let height = mediaRecord.height {
+                    cdMedia.resolutionHeight = height > Int32.max ? Int32.max : Int32(height)
+                }
+                
+                print("✅ Processed media record: \(mediaRecord.cloudinarySecureUrl)")
+                if cdMedia.captureTimeUTC != nil {
+                    print("   📅 Capture time: \(cdMedia.captureTimeUTC!)")
+                }
+            }
+            
+        } catch {
+            print("⚠️ Failed to fetch media for spot \(cdSpot.title): \(error)")
+        }
+    }
+    
+    /// Fetch sun snapshots from Supabase and create local CDSunSnapshot records
+    private func fetchAndCreateSunSnapshotsForSpot(_ cdSpot: CDSpot, spotId: UUID, in context: NSManagedObjectContext) async {
+        do {
+            // Fetch sun snapshot records for this spot from Supabase
+            struct SupabaseSunSnapshot: Codable {
+                let id: UUID
+                let spotId: UUID
+                let date: String
+                let sunriseUtc: String
+                let sunsetUtc: String
+                
+                enum CodingKeys: String, CodingKey {
+                    case id
+                    case spotId = "spot_id"
+                    case date
+                    case sunriseUtc = "sunrise_utc"
+                    case sunsetUtc = "sunset_utc"
+                }
+            }
+            
+            let sunSnapshots: [SupabaseSunSnapshot] = try await SupabaseManager.shared.client
+                .from("sun_snapshots")
+                .select("id, spot_id, date, sunrise_utc, sunset_utc")
+                .eq("spot_id", value: spotId.uuidString)
+                .execute()
+                .value
+            
+            print("🌅 Found \(sunSnapshots.count) sun snapshots for spot: \(cdSpot.title)")
+            
+            for sunSnapshot in sunSnapshots {
+                // Check if this sun snapshot already exists locally
+                let existingRequest: NSFetchRequest<CDSunSnapshot> = CDSunSnapshot.fetchRequest()
+                existingRequest.predicate = NSPredicate(format: "id == %@", sunSnapshot.id as CVarArg)
+                
+                let existingSnapshots = try context.fetch(existingRequest)
+                if !existingSnapshots.isEmpty {
+                    print("⏭️ Sun snapshot already exists locally: \(sunSnapshot.date)")
+                    continue
+                }
+                
+                // Create CDSunSnapshot record
+                let cdSunSnapshot = CDSunSnapshot(context: context)
+                cdSunSnapshot.id = sunSnapshot.id
+                
+                // Convert date string to Date object
+                let dateFormatter = DateFormatter()
+                dateFormatter.dateFormat = "yyyy-MM-dd"
+                cdSunSnapshot.date = dateFormatter.date(from: sunSnapshot.date) ?? Date()
+                
+                cdSunSnapshot.sunriseUTC = ISO8601DateFormatter().date(from: sunSnapshot.sunriseUtc)
+                cdSunSnapshot.sunsetUTC = ISO8601DateFormatter().date(from: sunSnapshot.sunsetUtc)
+                
+                // Initialize required fields to prevent crashes
+                cdSunSnapshot.relativeMinutesToEvent = Int32.max // Indicates nil value
+                cdSunSnapshot.closestEventString = nil
+                
+                cdSunSnapshot.spot = cdSpot
+                
+                print("☀️ Created local sun snapshot: \(sunSnapshot.date)")
+            }
+            
+        } catch {
+            print("⚠️ Failed to fetch sun snapshots for spot \(cdSpot.title): \(error)")
+        }
+    }
+    
+    /// Generate Cloudinary thumbnail URL from public ID
+    private func generateCloudinaryThumbnailUrl(publicId: String) -> String {
+        // Use the same cloud name and generate a 150x150 thumbnail
+        return "https://res.cloudinary.com/scenic-app/image/upload/c_thumb,w_150,h_150,g_auto,q_auto,f_auto/\(publicId)"
+    }
 }
 
 // MARK: - Notifications

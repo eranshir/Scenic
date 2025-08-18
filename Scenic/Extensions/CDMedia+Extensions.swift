@@ -44,7 +44,11 @@ extension CDMedia {
             filters: parseStringArray(self.filtersString),
             headingFromExif: self.headingFromExif,
             originalFilename: self.originalFilename,
-            createdAt: self.createdAt
+            createdAt: self.createdAt,
+            attributionText: self.responds(to: #selector(getter: CDMedia.attributionText)) ? self.attributionText : nil,
+            originalSource: self.responds(to: #selector(getter: CDMedia.originalSource)) ? self.originalSource : nil,
+            originalPhotoId: self.responds(to: #selector(getter: CDMedia.originalPhotoId)) ? self.originalPhotoId : nil,
+            licenseType: self.responds(to: #selector(getter: CDMedia.licenseType)) ? self.licenseType : nil
         )
     }
     
@@ -93,6 +97,20 @@ extension CDMedia {
             self.exifHeight = Int32(exif.height ?? -1)
             self.exifColorSpace = exif.colorSpace
             self.exifSoftware = exif.software
+        }
+        
+        // Attribution and source information (only set if Core Data model supports it)
+        if self.responds(to: #selector(setter: CDMedia.attributionText)) {
+            self.attributionText = media.attributionText
+        }
+        if self.responds(to: #selector(setter: CDMedia.originalSource)) {
+            self.originalSource = media.originalSource  
+        }
+        if self.responds(to: #selector(setter: CDMedia.originalPhotoId)) {
+            self.originalPhotoId = media.originalPhotoId
+        }
+        if self.responds(to: #selector(setter: CDMedia.licenseType)) {
+            self.licenseType = media.licenseType
         }
         
         // Local-first properties
