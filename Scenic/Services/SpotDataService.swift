@@ -131,15 +131,29 @@ class SpotDataService: ObservableObject {
             let existingSpots = try viewContext.fetch(request)
             
             let cdSpot: CDSpot
+            var isNewSpot = false
+            var hasNewLocalMedia = false
+            
             if let existing = existingSpots.first {
                 // Update existing
                 existing.updateFromSpot(spot)
                 existing.updatedAt = Date()
                 cdSpot = existing
+                
+                // Check if we're adding new local media to existing spot
+                if let existingMedia = existing.media as? Set<CDMedia> {
+                    let existingLocalCount = existingMedia.filter { $0.url.hasPrefix("local_") }.count
+                    let newLocalCount = spot.media.filter { $0.url.hasPrefix("local_") }.count
+                    hasNewLocalMedia = newLocalCount > existingLocalCount
+                }
             } else {
                 // Create new
                 cdSpot = createCDSpotFromSpot(spot, in: viewContext)
                 cdSpot.updatedAt = Date()
+                isNewSpot = true
+                
+                // New spots with local media need syncing
+                hasNewLocalMedia = spot.media.contains { $0.url.hasPrefix("local_") }
             }
             
             // Handle media relationships
@@ -167,6 +181,16 @@ class SpotDataService: ObservableObject {
             loadSpots() // Refresh the spots array
             
             print("✅ Saved spot: \(spot.title)")
+            
+            // Trigger automatic sync in background if it's a new spot or has new local media
+            if isNewSpot || hasNewLocalMedia {
+                print("🔄 Triggering automatic background sync for spot: \(spot.title)")
+                Task {
+                    // Small delay to ensure everything is saved
+                    try? await Task.sleep(nanoseconds: 1_000_000_000) // 1 second
+                    await SyncService.shared.syncLocalSpotsToSupabase()
+                }
+            }
         } catch {
             self.error = error
             print("❌ Failed to save spot: \(error)")

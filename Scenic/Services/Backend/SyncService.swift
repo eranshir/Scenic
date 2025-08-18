@@ -24,10 +24,17 @@ class SyncService: ObservableObject {
     
     /// Sync all local spots that haven't been uploaded to Supabase
     func syncLocalSpotsToSupabase() async {
+        guard !isSyncing else {
+            print("⚠️ Sync already in progress, skipping automatic sync")
+            return
+        }
+        
         isSyncing = true
         syncProgress = 0
-        syncStatus = "Starting sync..."
+        syncStatus = "Starting automatic sync..."
         syncErrors.removeAll()
+        
+        print("🔄 Starting automatic background sync...")
         
         do {
             // Fetch all local spots that don't have a remote ID
@@ -58,8 +65,10 @@ class SyncService: ObservableObject {
             
             if syncErrors.isEmpty {
                 syncStatus = "✅ Successfully synced \(localSpots.count) spots"
+                print("✅ Automatic sync completed successfully: \(localSpots.count) spot(s) uploaded")
             } else {
                 syncStatus = "⚠️ Synced with \(syncErrors.count) errors"
+                print("⚠️ Automatic sync completed with \(syncErrors.count) errors")
             }
             
             // Post notification to reload spots
