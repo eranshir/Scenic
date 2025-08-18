@@ -2869,6 +2869,10 @@ struct FullScreenPhotoView: View {
     
     @State private var dragOffset: CGFloat = 0
     @State private var dragVelocity: CGFloat = 0
+    @State private var currentZoomScale: CGFloat = 1.0
+    @State private var savedZoomScale: CGFloat = 1.0
+    @State private var currentOffset: CGSize = .zero
+    @State private var savedOffset: CGSize = .zero
     
     private var currentMedia: Media? {
         guard media.indices.contains(selectedIndex) else { return nil }
@@ -2884,26 +2888,43 @@ struct FullScreenPhotoView: View {
             if currentMedia != nil {
                 TabView(selection: $selectedIndex) {
                     ForEach(Array(media.enumerated()), id: \.offset) { index, mediaItem in
-                        ZStack {
-                            UnifiedPhotoView(
+                        GeometryReader { geometry in
+                            ZoomablePhotoView(
                                 photoIdentifier: mediaItem.url,
-                                targetSize: CGSize(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height),
-                                contentMode: .fit
+                                geometry: geometry,
+                                currentZoomScale: index == selectedIndex ? $currentZoomScale : .constant(1.0),
+                                savedZoomScale: index == selectedIndex ? $savedZoomScale : .constant(1.0),
+                                currentOffset: index == selectedIndex ? $currentOffset : .constant(.zero),
+                                savedOffset: index == selectedIndex ? $savedOffset : .constant(.zero),
+                                onTap: {
+                                    // Double tap to toggle zoom
+                                    withAnimation(.spring()) {
+                                        if currentZoomScale > 1.5 {
+                                            currentZoomScale = 1.0
+                                            savedZoomScale = 1.0
+                                            currentOffset = .zero
+                                            savedOffset = .zero
+                                        } else {
+                                            currentZoomScale = 2.5
+                                            savedZoomScale = 2.5
+                                        }
+                                    }
+                                },
+                                onDismiss: onDismiss
                             )
-                            .aspectRatio(contentMode: .fit)
-                            .tag(index)
-                            
-                            // Tap to dismiss overlay
-                            Color.clear
-                                .contentShape(Rectangle())
-                                .onTapGesture {
-                                    onDismiss()
-                                }
                         }
+                        .tag(index)
                     }
                 }
                 .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
                 .ignoresSafeArea()
+                // Reset zoom when changing photos
+                .onChange(of: selectedIndex) { _, _ in
+                    currentZoomScale = 1.0
+                    savedZoomScale = 1.0
+                    currentOffset = .zero
+                    savedOffset = .zero
+                }
             }
             
             // Top overlay with controls
@@ -2977,6 +2998,86 @@ struct FullScreenPhotoView: View {
                     .padding(.horizontal, 20)
                     .padding(.bottom, 40)
                 }
+            }
+        }
+    }
+}
+
+// MARK: - Zoomable Photo View
+
+struct ZoomablePhotoView: View {
+    let photoIdentifier: String
+    let geometry: GeometryProxy
+    @Binding var currentZoomScale: CGFloat
+    @Binding var savedZoomScale: CGFloat
+    @Binding var currentOffset: CGSize
+    @Binding var savedOffset: CGSize
+    let onTap: () -> Void
+    let onDismiss: () -> Void
+    
+    private let minScale: CGFloat = 1.0
+    private let maxScale: CGFloat = 5.0
+    
+    var body: some View {
+        UnifiedPhotoView(
+            photoIdentifier: photoIdentifier,
+            targetSize: CGSize(width: geometry.size.width, height: geometry.size.height),
+            contentMode: .fit
+        )
+        .scaleEffect(currentZoomScale)
+        .offset(currentOffset)
+        .gesture(
+            MagnificationGesture()
+                .onChanged { value in
+                    let delta = value / savedZoomScale
+                    currentZoomScale = min(max(savedZoomScale * delta, minScale), maxScale)
+                }
+                .onEnded { _ in
+                    savedZoomScale = currentZoomScale
+                    
+                    // Snap back to min scale if close
+                    if currentZoomScale < 1.2 {
+                        withAnimation(.spring()) {
+                            currentZoomScale = minScale
+                            savedZoomScale = minScale
+                            currentOffset = .zero
+                            savedOffset = .zero
+                        }
+                    }
+                }
+        )
+        .simultaneousGesture(
+            // Drag gesture only works when zoomed in
+            DragGesture()
+                .onChanged { value in
+                    if currentZoomScale > 1.0 {
+                        currentOffset = CGSize(
+                            width: savedOffset.width + value.translation.width,
+                            height: savedOffset.height + value.translation.height
+                        )
+                    }
+                }
+                .onEnded { _ in
+                    savedOffset = currentOffset
+                    
+                    // Limit panning bounds
+                    withAnimation(.spring()) {
+                        let maxOffset = geometry.size.width * (currentZoomScale - 1) / 2
+                        let maxOffsetY = geometry.size.height * (currentZoomScale - 1) / 2
+                        
+                        currentOffset.width = min(max(currentOffset.width, -maxOffset), maxOffset)
+                        currentOffset.height = min(max(currentOffset.height, -maxOffsetY), maxOffsetY)
+                        savedOffset = currentOffset
+                    }
+                }
+        )
+        .onTapGesture(count: 2) {
+            onTap()
+        }
+        .onTapGesture(count: 1) {
+            // Single tap to show/hide controls or dismiss if zoomed out
+            if currentZoomScale == 1.0 {
+                onDismiss()
             }
         }
     }
