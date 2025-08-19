@@ -185,6 +185,10 @@ class AppState: ObservableObject {
         planDataService.savePlan(plan)
     }
     
+    func updatePlan(_ plan: Plan) {
+        planDataService.savePlan(plan)
+    }
+    
     func deletePlan(_ plan: Plan) {
         planDataService.deletePlan(plan)
     }

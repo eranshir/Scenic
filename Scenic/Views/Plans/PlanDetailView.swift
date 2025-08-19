@@ -8,6 +8,7 @@ struct PlanDetailView: View {
     @State private var viewMode: ViewMode = .timeline
     @State private var showingAddItem = false
     @State private var showingShareSheet = false
+    @State private var showingEditPlan = false
     @State private var editingItem: PlanItem?
     @State private var showingRemoveAlert = false
     @State private var itemToRemove: PlanItem?
@@ -54,7 +55,7 @@ struct PlanDetailView: View {
                     Button(action: {}) {
                         Label("Fork Plan", systemImage: "arrow.triangle.branch")
                     }
-                    Button(action: {}) {
+                    Button(action: { showingEditPlan = true }) {
                         Label("Edit Plan", systemImage: "pencil")
                     }
                     Button(action: {}) {
@@ -74,6 +75,9 @@ struct PlanDetailView: View {
         .sheet(isPresented: $showingShareSheet) {
             ShareSheet(items: [createShareText()])
         }
+        .sheet(isPresented: $showingEditPlan) {
+            EditPlanView(plan: plan)
+        }
         .sheet(item: $editingItem) { item in
             EditPlanItemView(item: item, plan: plan)
         }
@@ -88,38 +92,90 @@ struct PlanDetailView: View {
     }
     
     private var planHeader: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 16) {
+            // Plan Description and Privacy
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
-                    if let description = plan.description {
+                    if let description = plan.description, !description.isEmpty {
                         Text(description)
                             .font(.subheadline)
                             .foregroundColor(.secondary)
-                    }
-                    
-                    if let dateRange = plan.dateRangeString {
-                        Text(dateRange)
-                            .font(.caption)
-                            .foregroundColor(.secondary)
+                    } else {
+                        Text("No description")
+                            .font(.subheadline)
+                            .foregroundStyle(.tertiary)
+                            .italic()
                     }
                 }
                 
                 Spacer()
                 
                 VStack(alignment: .trailing, spacing: 4) {
-                    Text("\(plan.items.count) items")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                    
                     if plan.isPublic {
                         Label("Public", systemImage: "globe")
-                            .font(.caption2)
+                            .font(.caption)
                             .foregroundColor(.blue)
                     } else {
                         Label("Private", systemImage: "lock.fill")
-                            .font(.caption2)
+                            .font(.caption)
                             .foregroundColor(.gray)
                     }
+                }
+            }
+            
+            // Plan Metadata Grid
+            LazyVGrid(columns: [
+                GridItem(.flexible()),
+                GridItem(.flexible()),
+                GridItem(.flexible())
+            ], spacing: 12) {
+                // Duration Info
+                VStack(alignment: .leading, spacing: 2) {
+                    Label("Duration", systemImage: "clock")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                    
+                    if let actualDuration = plan.actualDuration {
+                        Text("\(actualDuration + 1) days")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                    } else if let estimatedDuration = plan.estimatedDuration {
+                        Text("~\(estimatedDuration) days")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    } else {
+                        Text("Not set")
+                            .font(.subheadline)
+                            .foregroundStyle(.tertiary)
+                    }
+                }
+                
+                // Date Info
+                VStack(alignment: .leading, spacing: 2) {
+                    Label("Dates", systemImage: "calendar")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                    
+                    if let dateRange = plan.dateRangeString {
+                        Text(dateRange)
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                    } else {
+                        Text("Flexible")
+                            .font(.subheadline)
+                            .foregroundStyle(.tertiary)
+                    }
+                }
+                
+                // Items Count
+                VStack(alignment: .leading, spacing: 2) {
+                    Label("Items", systemImage: "mappin.and.ellipse")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                    
+                    Text("\(plan.items.count)")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
                 }
             }
             
