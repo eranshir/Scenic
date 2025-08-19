@@ -356,7 +356,7 @@ class SyncService: ObservableObject {
     
     // MARK: - Sync Down (Remote to Local)
     
-    /// Fetch remote spots from Supabase and store them locally
+    /// Fetch remote spots from Supabase and store them locally using incremental sync
     func syncRemoteSpotsToLocal() async {
         guard !isSyncing else {
             print("⚠️ Sync already in progress")
@@ -364,16 +364,11 @@ class SyncService: ObservableObject {
         }
         
         // Rate limiting: Don't sync more than once every 5 minutes
-        let lastSyncKey = "lastSyncDownTime"
         let minimumSyncInterval: TimeInterval = 5 * 60 // 5 minutes
         
-        if let lastSyncTime = UserDefaults.standard.object(forKey: lastSyncKey) as? Date {
-            let timeSinceLastSync = Date().timeIntervalSince(lastSyncTime)
-            if timeSinceLastSync < minimumSyncInterval {
-                let remainingTime = minimumSyncInterval - timeSinceLastSync
-                print("⏱️ Sync down rate limited. Last sync was \(Int(timeSinceLastSync)) seconds ago. Please wait \(Int(remainingTime)) more seconds.")
-                return
-            }
+        if !SyncTimestampManager.shared.shouldAllowSync(for: .spots, minimumInterval: minimumSyncInterval) {
+            print("⏱️ Spots sync rate limited. Skipping sync.")
+            return
         }
         
         isSyncing = true
@@ -384,8 +379,23 @@ class SyncService: ObservableObject {
         print("🔄 Starting sync down: Fetching remote spots from Supabase...")
         
         do {
-            // Fetch all public spots from Supabase
-            let remoteSpots = try await spotService.fetchSpots(limit: 1000)
+            // Get the last sync timestamp for incremental sync
+            let lastSyncTimestamp = SyncTimestampManager.shared.lastSpotsSync
+            let syncStartTime = Date() // Record when this sync started
+            
+            if let lastSync = lastSyncTimestamp {
+                print("🔄 Performing incremental sync: fetching spots updated since \(lastSync)")
+                syncStatus = "Fetching spots updated since last sync..."
+            } else {
+                print("🔄 Performing initial sync: fetching all spots")
+                syncStatus = "Fetching all spots (first time sync)..."
+            }
+            
+            // Fetch spots from Supabase using incremental sync
+            let remoteSpots = try await spotService.fetchSpots(
+                limit: 1000,
+                updatedSince: lastSyncTimestamp
+            )
             
             // Debug first few spots' coordinates
             print("🗺️ DEBUG: First 3 remote spots coordinates:")
@@ -432,7 +442,14 @@ class SyncService: ObservableObject {
                         print("➕ Created local spot: \(remoteSpot.title)")
                     } else {
                         let existingSpot = existingSpots[0]
-                        print("⏭️ Spot already exists locally: \(remoteSpot.title)")
+                        
+                        // For incremental sync, update the existing spot with latest data
+                        if lastSyncTimestamp != nil {
+                            print("🔄 Updating existing spot: \(remoteSpot.title)")
+                            updateCDSpotFromRemoteSpot(existingSpot, remoteSpot: remoteSpot)
+                        } else {
+                            print("⏭️ Spot already exists locally: \(remoteSpot.title)")
+                        }
                         
                         // Check if existing spot has invalid coordinates and fix them
                         if existingSpot.latitude.isNaN || existingSpot.longitude.isNaN {
@@ -477,7 +494,10 @@ class SyncService: ObservableObject {
                 print("⚠️ Sync down completed with \(syncErrors.count) errors")
             }
             
-            // Record successful sync time for rate limiting
+            // Record successful sync timestamp for incremental sync
+            SyncTimestampManager.shared.updateLastSpotsSync(to: syncStartTime)
+            
+            // Also keep the old rate limiting mechanism for backward compatibility
             UserDefaults.standard.set(Date(), forKey: "lastSyncDownTime")
             
             // Post notification to reload spots
@@ -539,6 +559,30 @@ class SyncService: ObservableObject {
         cdSpot.isPublished = true // Remote spots are already published
         
         return cdSpot
+    }
+    
+    /// Update an existing CDSpot with data from a remote SpotModel
+    private func updateCDSpotFromRemoteSpot(_ cdSpot: CDSpot, remoteSpot: SpotModel) {
+        // Update all fields that might have changed
+        cdSpot.title = remoteSpot.title
+        
+        // Update coordinates if they are valid
+        if remoteSpot.latitude.isFinite && remoteSpot.longitude.isFinite {
+            cdSpot.latitude = remoteSpot.latitude
+            cdSpot.longitude = remoteSpot.longitude
+        }
+        
+        cdSpot.headingDegrees = Int16(remoteSpot.headingDegrees ?? -1)
+        cdSpot.elevationMeters = Int16(remoteSpot.elevationMeters ?? -1)
+        cdSpot.subjectTags = remoteSpot.subjectTags
+        cdSpot.difficulty = Int16(remoteSpot.difficulty)
+        cdSpot.privacy = remoteSpot.privacy
+        cdSpot.license = remoteSpot.license
+        cdSpot.status = remoteSpot.status
+        cdSpot.voteCount = Int32(remoteSpot.voteCount)
+        cdSpot.updatedAt = remoteSpot.updatedAt
+        
+        print("🔄 Updated local spot data for: \(remoteSpot.title)")
     }
     
     /// Fetch media records from Supabase and create local CDMedia records

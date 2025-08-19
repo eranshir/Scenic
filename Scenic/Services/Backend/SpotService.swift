@@ -78,24 +78,33 @@ class SpotService: ObservableObject {
         radiusKm: Double = 50,
         tags: [String]? = nil,
         difficulty: Int? = nil,
-        limit: Int = 50
+        limit: Int = 50,
+        updatedSince: Date? = nil
     ) async throws -> [SpotModel] {
         // Build base query
-        let baseQuery = supabase
+        var baseQuery = supabase
             .from("spots")
             .select("*")
             .eq("status", value: "active")
+        
+        // Add timestamp filter for incremental sync
+        if let updatedSince = updatedSince {
+            let formatter = ISO8601DateFormatter()
+            formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+            let timestampString = formatter.string(from: updatedSince)
+            baseQuery = baseQuery.gte("updated_at", value: timestampString)
+        }
         
         // Build full query based on filters
         let query: PostgrestTransformBuilder
         if let difficulty = difficulty {
             query = baseQuery
                 .eq("difficulty", value: difficulty)
-                .order("created_at", ascending: false)
+                .order("updated_at", ascending: false)
                 .limit(limit)
         } else {
             query = baseQuery
-                .order("created_at", ascending: false)
+                .order("updated_at", ascending: false)
                 .limit(limit)
         }
         

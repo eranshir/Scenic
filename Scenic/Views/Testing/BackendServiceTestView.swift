@@ -329,6 +329,18 @@ struct BackendServiceTestView: View {
                     TestButton(title: "Sync Up Local Spots", icon: "arrow.up.circle") {
                         await testSyncUpLocalSpots()
                     }
+                    
+                    TestButton(title: "View Sync Timestamps", icon: "clock") {
+                        await testViewSyncTimestamps()
+                    }
+                    
+                    TestButton(title: "Clear All Sync Timestamps", icon: "trash") {
+                        await testClearSyncTimestamps()
+                    }
+                    
+                    TestButton(title: "Test Incremental Sync", icon: "arrow.clockwise") {
+                        await testIncrementalSync()
+                    }
                 }
             }
             
@@ -1215,6 +1227,53 @@ struct BackendServiceTestView: View {
         
         // This would require invalidating the auth token
         logInfo("Auth failure test would require signing out and attempting operations")
+        
+        isTestingServices = false
+    }
+    
+    private func testViewSyncTimestamps() async {
+        isTestingServices = true
+        logInfo("Viewing current sync timestamps...")
+        
+        let summary = SyncTimestampManager.shared.getSyncSummary()
+        logInfo(summary)
+        
+        isTestingServices = false
+    }
+    
+    private func testClearSyncTimestamps() async {
+        isTestingServices = true
+        logInfo("Clearing all sync timestamps...")
+        
+        SyncTimestampManager.shared.clearAllTimestamps()
+        logSuccess("✅ All sync timestamps cleared!")
+        logInfo("Next sync will be a full sync (all data)")
+        
+        isTestingServices = false
+    }
+    
+    private func testIncrementalSync() async {
+        isTestingServices = true
+        logInfo("Testing incremental sync functionality...")
+        
+        // First, show current timestamps
+        let beforeSummary = SyncTimestampManager.shared.getSyncSummary()
+        logInfo("Before sync:\n\(beforeSummary)")
+        
+        // Perform sync
+        do {
+            await SyncService.shared.syncRemoteSpotsToLocal()
+            
+            // Show timestamps after sync
+            let afterSummary = SyncTimestampManager.shared.getSyncSummary()
+            logInfo("After sync:\n\(afterSummary)")
+            
+            logSuccess("✅ Incremental sync test completed!")
+            logInfo("💡 Run this test again immediately to see incremental behavior")
+            
+        } catch {
+            logError("Sync failed: \(error.localizedDescription)")
+        }
         
         isTestingServices = false
     }
