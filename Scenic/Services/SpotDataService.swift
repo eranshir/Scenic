@@ -122,6 +122,19 @@ class SpotDataService: ObservableObject {
         }
     }
     
+    func getAllCachedMedia() -> [Media] {
+        do {
+            let request: NSFetchRequest<CDMedia> = CDMedia.fetchRequest()
+            request.predicate = NSPredicate(format: "isDownloaded == true")
+            
+            let cdMediaItems = try viewContext.fetch(request)
+            return cdMediaItems.map { convertCDMediaToMedia($0) }
+        } catch {
+            print("Failed to load cached media: \(error)")
+            return []
+        }
+    }
+    
     func saveSpot(_ spot: Spot) {
         do {
             // Check if spot already exists

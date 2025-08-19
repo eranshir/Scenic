@@ -4,23 +4,26 @@ struct ContentView: View {
     @EnvironmentObject var appState: AppState
     @State private var selectedTab: AppTab = .home
     @State private var showTestView = false // Set to true to test connections
+    @State private var showSplashScreen = true
     
     var body: some View {
         if showTestView {
             TestConnectionView()
-        } else if appState.isCheckingAuthStatus {
-            // Show loading screen while checking authentication
-            VStack {
-                Spacer()
-                ProgressView()
-                    .scaleEffect(1.5)
-                    .padding()
-                Text("Loading...")
-                    .font(.headline)
-                    .foregroundColor(.secondary)
-                Spacer()
-            }
-            .background(Color(.systemBackground))
+        } else if appState.isCheckingAuthStatus || showSplashScreen {
+            // Show splash screen while checking authentication and for 1 second after
+            SplashScreenView()
+                .onAppear {
+                    // If auth check is complete, start the 1-second timer
+                    if !appState.isCheckingAuthStatus {
+                        startSplashTimer()
+                    }
+                }
+                .onChange(of: appState.isCheckingAuthStatus) { _, isChecking in
+                    // When auth check completes, start the 1-second timer
+                    if !isChecking {
+                        startSplashTimer()
+                    }
+                }
         } else if !appState.isAuthenticated {
             AuthenticationView()
         } else {
@@ -56,6 +59,15 @@ struct ContentView: View {
                 .tag(AppTab.profile)
             }
             .tint(.green)
+        }
+    }
+    
+    private func startSplashTimer() {
+        // Show splash screen for 1 second after auth check completes
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+            withAnimation(.easeInOut(duration: 0.3)) {
+                showSplashScreen = false
+            }
         }
     }
 }
