@@ -67,6 +67,7 @@ struct AsyncPhotoView: View {
     }
     
     private func loadPhotoInternal() async {
+        // TODO: Replace with CDMedia-based approach when available
         // Legacy string-based loading - should eventually be replaced with CDMedia-based approach
         let loadedImage = await PhotoLoader.shared.loadImage(from: photoIdentifier, targetSize: targetSize)
         

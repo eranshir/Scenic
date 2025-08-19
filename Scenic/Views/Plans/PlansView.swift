@@ -1,20 +1,57 @@
 import SwiftUI
+import CoreLocation
 
 struct PlansView: View {
     @EnvironmentObject var appState: AppState
     @State private var showingCreatePlan = false
+    @State private var searchText = ""
+    @State private var selectedFilter: PlanFilter = .all
+    
+    enum PlanFilter: String, CaseIterable {
+        case all = "All"
+        case myPlans = "My Plans"
+        case `public` = "Public"
+        case scheduled = "Scheduled"
+    }
     
     var body: some View {
         NavigationStack {
             Group {
-                if appState.plans.isEmpty {
-                    emptyState
+                if filteredPlans.isEmpty {
+                    if appState.plans.isEmpty {
+                        emptyState
+                    } else {
+                        noResultsView
+                    }
                 } else {
                     plansList
                 }
             }
+            .searchable(text: $searchText, prompt: "Search plans...")
             .navigationTitle("Plans")
             .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Menu {
+                        ForEach(PlanFilter.allCases, id: \.self) { filter in
+                            Button(action: { selectedFilter = filter }) {
+                                HStack {
+                                    Text(filter.rawValue)
+                                    if selectedFilter == filter {
+                                        Spacer()
+                                        Image(systemName: "checkmark")
+                                    }
+                                }
+                            }
+                        }
+                    } label: {
+                        HStack {
+                            Text(selectedFilter.rawValue)
+                            Image(systemName: "chevron.down")
+                                .font(.caption)
+                        }
+                    }
+                }
+                
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(action: { showingCreatePlan = true }) {
                         Image(systemName: "plus")
@@ -57,7 +94,7 @@ struct PlansView: View {
     private var plansList: some View {
         ScrollView {
             LazyVStack(spacing: 12) {
-                ForEach(mockPlans) { plan in
+                ForEach(filteredPlans) { plan in
                     NavigationLink(destination: PlanDetailView(plan: plan)) {
                         PlanCard(plan: plan)
                     }
@@ -66,6 +103,50 @@ struct PlansView: View {
             }
             .padding()
         }
+    }
+    
+    private var filteredPlans: [Plan] {
+        let plans = appState.plans.isEmpty ? mockPlans : appState.plans
+        
+        let filtered = plans.filter { plan in
+            switch selectedFilter {
+            case .all:
+                return true
+            case .myPlans:
+                return plan.createdBy == appState.currentUser?.id
+            case .`public`:
+                return plan.isPublic
+            case .scheduled:
+                return plan.startDate != nil
+            }
+        }
+        
+        if searchText.isEmpty {
+            return filtered
+        } else {
+            return filtered.filter { plan in
+                plan.title.localizedCaseInsensitiveContains(searchText) ||
+                (plan.description?.localizedCaseInsensitiveContains(searchText) ?? false)
+            }
+        }
+    }
+    
+    private var noResultsView: some View {
+        VStack(spacing: 20) {
+            Image(systemName: "magnifyingglass")
+                .font(.system(size: 50))
+                .foregroundColor(.gray)
+            
+            Text("No plans found")
+                .font(.title2)
+                .bold()
+            
+            Text("Try adjusting your search or filter")
+                .font(.footnote)
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+        }
+        .padding(.horizontal, 40)
     }
 }
 
@@ -76,7 +157,7 @@ struct PlanCard: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(plan.name)
+                    Text(plan.title)
                         .font(.headline)
                     
                     if let startDate = plan.startDate {
@@ -88,18 +169,24 @@ struct PlanCard: View {
                 
                 Spacer()
                 
-                if plan.isOfflineCached {
-                    Image(systemName: "arrow.down.circle.fill")
-                        .foregroundColor(.green)
+                if plan.isPublic {
+                    Image(systemName: "globe")
+                        .foregroundColor(.blue)
+                } else {
+                    Image(systemName: "lock.fill")
+                        .foregroundColor(.gray)
                 }
             }
             
             HStack(spacing: 20) {
-                Label("\(plan.items.count) spots", systemImage: "mappin")
+                Label("\(plan.items.count) items", systemImage: "mappin")
                     .font(.caption)
                 
                 if let duration = planDuration(plan) {
                     Label(duration, systemImage: "clock")
+                        .font(.caption)
+                } else if let estimatedDuration = plan.estimatedDuration {
+                    Label("\(estimatedDuration) days", systemImage: "clock")
                         .font(.caption)
                 }
             }
@@ -110,15 +197,15 @@ struct PlanCard: View {
                     ForEach(plan.items.prefix(5)) { item in
                         VStack {
                             Circle()
-                                .fill(Color.green.opacity(0.2))
+                                .fill(colorForItemType(item.type).opacity(0.2))
                                 .frame(width: 40, height: 40)
                                 .overlay(
-                                    Image(systemName: "camera.fill")
+                                    Image(systemName: item.type.systemImage)
                                         .font(.caption)
-                                        .foregroundColor(.green)
+                                        .foregroundColor(colorForItemType(item.type))
                                 )
                             
-                            if let time = item.plannedArrivalUTC {
+                            if let time = item.scheduledStartTime {
                                 Text(formatTime(time))
                                     .font(.caption2)
                                     .foregroundColor(.secondary)
@@ -158,33 +245,75 @@ struct PlanCard: View {
         formatter.timeStyle = .short
         return formatter.string(from: date)
     }
+    
+    private func colorForItemType(_ type: PlanItemType) -> Color {
+        switch type {
+        case .spot: return .green
+        case .accommodation: return .blue
+        case .restaurant: return .orange
+        case .attraction: return .purple
+        }
+    }
 }
 
 let mockPlans = [
     Plan(
         id: UUID(),
-        userId: UUID(),
-        name: "Golden Gate Weekend",
+        title: "Golden Gate Weekend",
+        description: "A beautiful weekend exploring the Golden Gate area",
+        createdBy: UUID(),
+        createdAt: Date(),
+        updatedAt: Date(),
+        isPublic: false,
+        originalPlanId: nil,
+        estimatedDuration: 2,
         startDate: Date(),
         endDate: Date().addingTimeInterval(86400 * 2),
-        timezoneIdentifier: TimeZone.current.identifier,
-        isOfflineCached: true,
         items: [
             PlanItem(
                 id: UUID(),
                 planId: UUID(),
+                type: .spot,
+                orderIndex: 0,
+                scheduledDate: Date(),
+                scheduledStartTime: Date().addingTimeInterval(3600 * 6),
+                scheduledEndTime: Date().addingTimeInterval(3600 * 8),
+                timingPreference: .sunrise,
                 spotId: UUID(),
-                spot: mockSpots[0],
-                targetDate: Date(),
-                plannedArrivalUTC: Date().addingTimeInterval(3600 * 6),
-                plannedDepartureUTC: Date().addingTimeInterval(3600 * 8),
-                backupRank: nil,
+                spot: nil,
+                poiData: nil,
                 notes: nil,
-                isCompleted: false
+                createdAt: Date()
+            ),
+            PlanItem(
+                id: UUID(),
+                planId: UUID(),
+                type: .restaurant,
+                orderIndex: 1,
+                scheduledDate: Date(),
+                scheduledStartTime: Date().addingTimeInterval(3600 * 12),
+                scheduledEndTime: Date().addingTimeInterval(3600 * 13),
+                timingPreference: .flexible,
+                spotId: nil,
+                spot: nil,
+                poiData: POIData(
+                    name: "Fisherman's Wharf Restaurant",
+                    address: "123 Pier St, San Francisco, CA",
+                    coordinate: CLLocationCoordinate2D(latitude: 37.8080, longitude: -122.4177),
+                    category: "Restaurant",
+                    phoneNumber: "+1-415-555-0123",
+                    website: "https://example.com",
+                    mapItemIdentifier: nil,
+                    businessHours: nil,
+                    amenities: ["Outdoor Seating", "Ocean View"],
+                    rating: 4.5,
+                    priceRange: "$$",
+                    photos: nil
+                ),
+                notes: "Great seafood with ocean views",
+                createdAt: Date()
             )
-        ],
-        createdAt: Date(),
-        updatedAt: Date()
+        ]
     )
 ]
 

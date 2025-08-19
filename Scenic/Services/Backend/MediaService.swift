@@ -204,7 +204,7 @@ class MediaService: ObservableObject {
     
     /// Delete media
     func deleteMedia(_ mediaId: UUID) async throws {
-        guard let userId = try? await supabase.auth.session.user.id else {
+        guard let _ = try? await supabase.auth.session.user.id else {
             throw MediaError.notAuthenticated
         }
         

@@ -45,10 +45,7 @@
 			membershipExceptions = (
 				CLAUDE.md,
 				Info.plist,
-				QUICK_SETUP.md,
 				Scenic/Info.plist,
-				ScenicDataModel.md,
-				setup_coredata.sh,
 			);
 			target = 056C8FCE2E4FEBB300D746BA /* Scenic */;
 		};

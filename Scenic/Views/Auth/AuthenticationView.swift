@@ -258,7 +258,7 @@ struct AuthenticationView: View {
                 UserDefaults.standard.set(flowId, forKey: "pendingAuthFlow")
                 
                 // Get OAuth URL with PKCE enabled
-                let url = try await supabase.auth.getOAuthSignInURL(
+                let url = try supabase.auth.getOAuthSignInURL(
                     provider: .google,
                     scopes: "email profile",
                     redirectTo: URL(string: "scenic://auth-callback"),

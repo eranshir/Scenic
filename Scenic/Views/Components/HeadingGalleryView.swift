@@ -52,7 +52,7 @@ struct HeadingGalleryView: View {
                         }
                         .onEnded { value in
                             let threshold: CGFloat = 100
-                            let draggedIndex = -Int((value.translation.width + threshold/2) / threshold)
+                            let _ = -Int((value.translation.width + threshold/2) / threshold)
                             
                             withAnimation(.easeInOut(duration: 0.3)) {
                                 if value.translation.width > threshold && currentIndex > 0 {

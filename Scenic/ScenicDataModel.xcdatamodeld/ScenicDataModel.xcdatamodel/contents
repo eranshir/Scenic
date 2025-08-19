@@ -123,6 +123,39 @@
         <attribute name="sunsetUTC" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <relationship name="spot" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="CDSpot" inverseName="sunSnapshot" inverseEntity="CDSpot"/>
     </entity>
+    <entity name="CDPlan" representedClassName="CDPlan" syncable="YES">
+        <attribute name="createdAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="createdBy" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="description_" optional="YES" attributeType="String"/>
+        <attribute name="endDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="estimatedDuration" optional="YES" attributeType="Integer 32" defaultValueString="-1" usesScalarValueType="YES"/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="isPublic" optional="YES" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="lastSynced" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="originalPlanId" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="serverPlanId" optional="YES" attributeType="String"/>
+        <attribute name="startDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="title" optional="YES" attributeType="String"/>
+        <attribute name="updatedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <relationship name="items" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="CDPlanItem" inverseName="plan" inverseEntity="CDPlanItem"/>
+    </entity>
+    <entity name="CDPlanItem" representedClassName="CDPlanItem" syncable="YES">
+        <attribute name="createdAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="lastSynced" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="notes" optional="YES" attributeType="String"/>
+        <attribute name="orderIndex" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="poiDataJSON" optional="YES" attributeType="String"/>
+        <attribute name="scheduledDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="scheduledEndTime" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="scheduledStartTime" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="serverPlanItemId" optional="YES" attributeType="String"/>
+        <attribute name="spotId" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="timingPreference" optional="YES" attributeType="String"/>
+        <attribute name="type" optional="YES" attributeType="String"/>
+        <relationship name="plan" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="CDPlan" inverseName="items" inverseEntity="CDPlan"/>
+        <relationship name="spot" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="CDSpot"/>
+    </entity>
     <entity name="CDWeatherSnapshot" representedClassName="CDWeatherSnapshot" syncable="YES">
         <attribute name="cloudCoveragePercent" optional="YES" attributeType="Integer 32" defaultValueString="-1" usesScalarValueType="YES"/>
         <attribute name="conditionCode" optional="YES" attributeType="String"/>

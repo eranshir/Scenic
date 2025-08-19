@@ -27,7 +27,7 @@ class PlanService: ObservableObject {
             throw PlanError.notAuthenticated
         }
         
-        let planCreate = PlanCreate(
+        let planCreate = SimplePlanCreate(
             userId: userId,
             title: title,
             description: description,
@@ -136,7 +136,7 @@ class PlanService: ObservableObject {
         }
         
         // Create update object with only non-nil values
-        let updates = PlanUpdate(
+        let updates = SimplePlanUpdate(
             title: title,
             description: description,
             plannedDate: plannedDate,
@@ -349,7 +349,7 @@ class PlanService: ObservableObject {
             .value
         
         // Create new plan
-        let newPlan = PlanCreate(
+        let newPlan = SimplePlanCreate(
             userId: userId,
             title: "\(originalPlan.title) (Copy)",
             description: originalPlan.description,
@@ -416,7 +416,7 @@ struct PlanModel: Codable, Identifiable {
     }
 }
 
-struct PlanCreate: Codable {
+struct SimplePlanCreate: Codable {
     let userId: UUID
     let title: String
     let description: String?
@@ -431,11 +431,12 @@ struct PlanCreate: Codable {
     }
 }
 
-struct PlanUpdate: Codable {
+struct SimplePlanUpdate: Codable {
     let title: String?
     let description: String?
     let plannedDate: Date?
     let isPublic: Bool?
+    
     
     private enum CodingKeys: String, CodingKey {
         case title, description

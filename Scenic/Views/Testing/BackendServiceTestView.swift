@@ -1203,13 +1203,8 @@ struct BackendServiceTestView: View {
         isTestingServices = true
         logInfo("Starting sync up test - uploading local spots...")
         
-        do {
-            await SyncService.shared.syncLocalSpotsToSupabase()
-            logSuccess("✓ Sync up completed successfully!")
-            logInfo("Check the log for details on uploaded spots")
-        } catch {
-            logError("Sync up failed: \(error.localizedDescription)")
-        }
+        // TODO: Implement SyncService or remove this test
+        logInfo("SyncService not yet implemented")
         
         isTestingServices = false
     }

@@ -176,10 +176,11 @@ Plans Tab
 - Filter by public/private
 - Search plans
 - Create new plan button
-- Each plan shows: title, duration, item count, privacy status
+- Each plan shows: title, **date range (if set)**, duration, item count, privacy status
 
 #### Plan Detail View
 - Plan header: title, description, privacy toggle
+- **Date display section**: Start/end dates when available, with duration calculation
 - Timeline/list view toggle
 - Plan items in chronological order (if scheduled)
 - Map view showing all locations
@@ -198,6 +199,20 @@ Plans Tab
 - Duration/dates input
 - Timing preferences per item
 - Iterative improvement suggestions
+
+#### POI Search & Review Flow
+- **Search Interface**: Text search with category filters (accommodation, restaurant, attraction)
+- **Search Results List**: POI cards with name, category, rating, distance, quick preview image
+- **POI Detail View**: 
+  - Complete POI information (name, address, phone, website)
+  - Photo gallery from Maps API data
+  - Reviews/ratings summary
+  - Business hours and amenities
+  - Distance from other plan items
+  - Category selection (accommodation/restaurant/attraction/custom)
+  - "Add to Plan" button with timing preferences
+- **Location Integration**: Show POI on map relative to existing plan items
+- **Bulk Add**: Select multiple POIs from search results
 
 ### 4.3 Map Integration
 - Show all plan items on unified map
@@ -230,11 +245,12 @@ Plans Tab
 
 ### 5.2 Phase 2: POI Integration & Search (2 weeks)
 
-#### Week 4: Apple Maps Integration
-- [ ] Implement MapKit local search for accommodations
-- [ ] Add restaurant search functionality  
-- [ ] Implement attraction search
-- [ ] Create POI selection and addition flow
+#### Week 4: POI Search & Integration
+- [ ] Implement comprehensive POI search interface with category filters
+- [ ] Create POI search results list with cards and preview images
+- [ ] Build detailed POI review view with photos, ratings, and business info
+- [ ] Implement MapKit local search for accommodations, restaurants, attractions
+- [ ] Add distance calculation and travel time estimation between POIs and plan items
 
 #### Week 5: Enhanced Plan Management
 - [ ] Implement plan item detail editing
@@ -273,9 +289,15 @@ Plans Tab
 ## 6. API Integrations Required
 
 ### 6.1 Apple Maps / MapKit
-- **Purpose**: Search for accommodations, restaurants, attractions
-- **APIs**: `MKLocalSearch`, `MKLocalSearchRequest`
-- **Data**: POI names, addresses, coordinates, categories
+- **Purpose**: Search and detailed information for accommodations, restaurants, attractions
+- **APIs**: `MKLocalSearch`, `MKLocalSearchRequest`, `MKMapItem`
+- **Data Retrieved**:
+  - Basic info: POI names, addresses, coordinates, categories
+  - Business details: Phone numbers, websites, business hours
+  - Ratings and review counts
+  - Photos (when available)
+  - Amenities and features (WiFi, parking, etc.)
+  - Price range indicators
 
 ### 6.2 OpenAI / Claude API
 - **Purpose**: Plan organization and optimization
@@ -310,7 +332,38 @@ Plans Tab
 5. User reviews and can request modifications
 6. Accept or iterate on the suggestions
 
-### 7.4 Plan Sharing Flow
+### 7.4 Date Management Flow
+1. User opens plan detail view
+2. If no dates set: Shows "Set dates" button in header
+3. If dates set: Shows date range prominently (e.g., "Mar 15-22, 2025 • 8 days")
+4. Tap date section to edit: Date picker for start/end dates
+5. AI organization becomes available once dates are set
+6. Timeline view shows daily breakdown when dates are present
+
+### 7.5 POI Search & Addition Flow
+1. User taps "Add Item" button in plan detail view
+2. Select "Search Places" option
+3. **Search Phase**:
+   - Enter search query (e.g., "hotels in Rome", "restaurants near Colosseum")
+   - Apply category filters (accommodation, restaurant, attraction, all)
+   - Set distance radius from plan center or specific item
+4. **Browse Results**:
+   - Scroll through POI cards with key info (name, rating, distance, price range)
+   - Preview photos and quick details
+   - Map view showing POI locations relative to existing plan items
+5. **Review POI Details**:
+   - Tap POI card to open detailed view
+   - Review full information: description, photos, hours, amenities, reviews
+   - See distance/travel time to other plan items
+   - Preview POI location on map
+6. **Add to Plan**:
+   - Confirm POI category (accommodation/restaurant/attraction/custom)
+   - Set timing preferences if relevant
+   - Add notes or special requirements
+   - Tap "Add to Plan" to confirm
+7. POI added to plan with proper categorization and metadata
+
+### 7.6 Plan Sharing Flow
 1. User makes plan public via privacy toggle
 2. Plan becomes discoverable in public plans
 3. Other users can view (dates hidden) and fork

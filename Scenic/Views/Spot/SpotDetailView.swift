@@ -174,6 +174,25 @@ struct SpotDetailView: View {
             }
             
             Spacer()
+            
+            // Add to Plan button - properly isolated
+            Button(action: { showingAddToPlan = true }) {
+                HStack(spacing: 6) {
+                    Image(systemName: "calendar.badge.plus")
+                        .font(.system(size: 16, weight: .semibold))
+                    Text("Add to Plan")
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+                }
+                .foregroundColor(.white)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 8)
+                .background(.green)
+                .cornerRadius(25)
+                .shadow(color: .black.opacity(0.2), radius: 4, x: 0, y: 2)
+            }
+            .buttonStyle(.plain)
+            .zIndex(100)  // Ensure button is above any background taps
         }
     }
     
@@ -2006,10 +2025,11 @@ struct CarouselPhotoItem: View {
                 }
             }
         }
-        .frame(width: itemWidth, height: .infinity)
+        .frame(width: itemWidth)
         .scaleEffect(isCenterItem ? 1.0 : 0.9)
         .opacity(isCenterItem ? 1.0 : 0.7)
         .animation(.spring(response: 0.5, dampingFraction: 0.8), value: selectedIndex)
+        .contentShape(RoundedRectangle(cornerRadius: isCenterItem ? 12 : 10))
         .onTapGesture {
             onTap()
         }
