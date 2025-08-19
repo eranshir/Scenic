@@ -356,4 +356,29 @@ class PhotoCacheService: ObservableObject {
             print("❌ Failed to list cached files: \(error)")
         }
     }
+    
+    func getAllCachedPhotoFilenames() -> [String] {
+        do {
+            let contents = try fileManager.contentsOfDirectory(at: cacheDirectory, includingPropertiesForKeys: nil)
+            // Filter to only image files (jpg, jpeg, png) and exclude thumbnails
+            let photoFiles = contents.compactMap { fileURL -> String? in
+                let fileName = fileURL.lastPathComponent
+                let lowercaseFileName = fileName.lowercased()
+                
+                // Include image files but exclude thumbnails
+                if (lowercaseFileName.hasSuffix(".jpg") || lowercaseFileName.hasSuffix(".jpeg") || lowercaseFileName.hasSuffix(".png")) 
+                   && !lowercaseFileName.contains("_thumb") {
+                    return fileName
+                } else {
+                    return nil
+                }
+            }
+            
+            print("📁 Found \(photoFiles.count) cached photo files out of \(contents.count) total files")
+            return photoFiles
+        } catch {
+            print("❌ Failed to get cached photo filenames: \(error)")
+            return []
+        }
+    }
 }

@@ -74,57 +74,46 @@ struct SplashScreenView: View {
     }
     
     private func loadRandomPhoto() {
-        // First, let's see what files are actually in the cache
-        print("🖼️ === DEBUGGING SPLASH SCREEN PHOTO LOADING ===")
-        PhotoCacheService.shared.listCachedFiles()
+        print("🖼️ === SPLASH SCREEN: LOADING RANDOM PHOTO ===")
         
-        // Get all cached photos from Core Data
-        let cachedMedia = spotDataService.getAllCachedMedia()
-        print("🖼️ SplashScreen: Found \(cachedMedia.count) total cached media from Core Data")
+        // Get ALL cached photo files directly from PhotoCacheService (not just spot-associated ones)
+        let allCachedPhotos = PhotoCacheService.shared.getAllCachedPhotoFilenames()
+        print("🖼️ Found \(allCachedPhotos.count) total cached photos from PhotoCacheService")
         
-        // Debug: Print some sample URLs
-        for (index, media) in cachedMedia.prefix(5).enumerated() {
-            print("🖼️ Sample media \(index): URL=\(media.url), ID=\(media.id)")
-        }
-        
-        // Instead of filtering, let's just try to use any cached media and see what happens
-        if !cachedMedia.isEmpty {
-            // Pick a random photo
-            let randomIndex = Int.random(in: 0..<cachedMedia.count)
-            let selectedMedia = cachedMedia[randomIndex]
+        if !allCachedPhotos.isEmpty {
+            // Pick a random photo from ALL cached photos
+            let randomIndex = Int.random(in: 0..<allCachedPhotos.count)
+            let selectedFilename = allCachedPhotos[randomIndex]
             
-            // Try different identifier formats
-            let identifierOptions = [
-                selectedMedia.id.uuidString, // Just the UUID
-                "\(selectedMedia.id.uuidString).jpg", // UUID with .jpg
-                selectedMedia.url, // Original URL
-                selectedMedia.url.replacingOccurrences(of: ".jpg", with: ""), // Remove .jpg if present
-            ]
+            // Convert filename to identifier (remove .jpg extension for UnifiedPhotoView)
+            let photoIdentifier = selectedFilename.replacingOccurrences(of: ".jpg", with: "")
+                                                  .replacingOccurrences(of: ".jpeg", with: "")
+                                                  .replacingOccurrences(of: ".png", with: "")
             
-            // Test each option to see which files exist
-            print("🖼️ Testing identifier options for media ID \(selectedMedia.id):")
-            for (index, option) in identifierOptions.enumerated() {
-                let filename = option.contains("://") ? "\(selectedMedia.id.uuidString).jpg" : "\(option).jpg"
-                let exists = PhotoCacheService.shared.fileExists(filename: filename)
-                print("🖼️   Option \(index): '\(option)' -> filename '\(filename)' exists: \(exists)")
-                
-                if exists && randomPhoto == nil {
-                    randomPhoto = option
-                    print("🖼️ ✅ Selected option \(index) as random photo identifier: \(option)")
-                }
-            }
+            randomPhoto = photoIdentifier
+            print("🖼️ ✅ Selected random photo: '\(selectedFilename)' -> identifier: '\(photoIdentifier)'")
             
-            // Fallback: just use the UUID
-            if randomPhoto == nil {
-                randomPhoto = selectedMedia.id.uuidString
-                print("🖼️ 🔄 Fallback: using UUID as identifier: \(selectedMedia.id.uuidString)")
+            // Debug: Show some sample filenames
+            print("🖼️ Sample cached photos:")
+            for (index, filename) in allCachedPhotos.prefix(5).enumerated() {
+                print("🖼️   \(index): \(filename)")
             }
             
         } else {
-            print("🖼️ ❌ No cached media found in Core Data")
+            print("🖼️ ❌ No cached photos found in PhotoCacheService")
+            // Still check Core Data as fallback
+            let cachedMedia = spotDataService.getAllCachedMedia()
+            print("🖼️ Fallback: Found \(cachedMedia.count) cached media from Core Data")
+            
+            if !cachedMedia.isEmpty {
+                let randomIndex = Int.random(in: 0..<cachedMedia.count)
+                let selectedMedia = cachedMedia[randomIndex]
+                randomPhoto = selectedMedia.id.uuidString
+                print("🖼️ 🔄 Using Core Data fallback: \(selectedMedia.id.uuidString)")
+            }
         }
         
-        print("🖼️ === END DEBUGGING ===")
+        print("🖼️ === END SPLASH SCREEN PHOTO LOADING ===")
     }
 }
 
