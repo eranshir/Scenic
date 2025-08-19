@@ -8,11 +8,19 @@ struct PlanDetailView: View {
     @State private var viewMode: ViewMode = .timeline
     @State private var showingAddItem = false
     @State private var showingShareSheet = false
-    @State private var showingEditPlan = false
     @State private var editingItem: PlanItem?
     @State private var showingRemoveAlert = false
     @State private var itemToRemove: PlanItem?
     @State private var isEditMode = false
+    
+    // Inline editing state
+    @State private var editTitle: String = ""
+    @State private var editDescription: String = ""
+    @State private var editIsPublic: Bool = false
+    @State private var editEstimatedDuration: Int? = nil
+    @State private var editStartDate: Date = Date()
+    @State private var editEndDate: Date = Date()
+    @State private var editIncludeDates: Bool = false
     
     enum ViewMode: String, CaseIterable {
         case timeline = "Timeline"
@@ -34,20 +42,24 @@ struct PlanDetailView: View {
                 }
             }
         }
-        .navigationTitle(plan.title)
-        .navigationBarTitleDisplayMode(.large)
+        .navigationTitle(isEditMode ? "Edit Plan" : plan.title)
+        .navigationBarTitleDisplayMode(isEditMode ? .inline : .large)
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
-                if viewMode == .timeline {
-                    Button(isEditMode ? "Done" : "Edit") {
-                        withAnimation {
-                            isEditMode.toggle()
-                        }
+                if isEditMode {
+                    Button("Cancel") {
+                        cancelEditing()
                     }
                 }
             }
             
             ToolbarItem(placement: .navigationBarTrailing) {
+                if isEditMode {
+                    Button("Save") {
+                        saveChanges()
+                    }
+                    .fontWeight(.semibold)
+                } else {
                 Menu {
                     Button(action: { showingShareSheet = true }) {
                         Label("Share Plan", systemImage: "square.and.arrow.up")
@@ -55,7 +67,7 @@ struct PlanDetailView: View {
                     Button(action: {}) {
                         Label("Fork Plan", systemImage: "arrow.triangle.branch")
                     }
-                    Button(action: { showingEditPlan = true }) {
+                    Button(action: { startEditing() }) {
                         Label("Edit Plan", systemImage: "pencil")
                     }
                     Button(action: {}) {
@@ -67,6 +79,7 @@ struct PlanDetailView: View {
                 } label: {
                     Image(systemName: "ellipsis.circle")
                 }
+                }
             }
         }
         .sheet(isPresented: $showingAddItem) {
@@ -74,9 +87,6 @@ struct PlanDetailView: View {
         }
         .sheet(isPresented: $showingShareSheet) {
             ShareSheet(items: [createShareText()])
-        }
-        .sheet(isPresented: $showingEditPlan) {
-            EditPlanView(plan: plan)
         }
         .sheet(item: $editingItem) { item in
             EditPlanItemView(item: item, plan: plan)
@@ -93,89 +103,138 @@ struct PlanDetailView: View {
     
     private var planHeader: some View {
         VStack(alignment: .leading, spacing: 16) {
-            // Plan Description and Privacy
-            HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    if let description = plan.description, !description.isEmpty {
-                        Text(description)
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                    } else {
-                        Text("No description")
-                            .font(.subheadline)
-                            .foregroundStyle(.tertiary)
-                            .italic()
-                    }
+            if isEditMode {
+                // Plan Title and Description (editable)
+                VStack(alignment: .leading, spacing: 12) {
+                    TextField("Plan Title", text: $editTitle)
+                        .font(.title2)
+                        .fontWeight(.bold)
+                        .textFieldStyle(.roundedBorder)
+                    
+                    TextField("Description (optional)", text: $editDescription, axis: .vertical)
+                        .font(.subheadline)
+                        .textFieldStyle(.roundedBorder)
+                        .lineLimit(2...4)
                 }
-                
-                Spacer()
-                
-                VStack(alignment: .trailing, spacing: 4) {
-                    if plan.isPublic {
-                        Label("Public", systemImage: "globe")
-                            .font(.caption)
-                            .foregroundColor(.blue)
-                    } else {
-                        Label("Private", systemImage: "lock.fill")
-                            .font(.caption)
-                            .foregroundColor(.gray)
+            } else {
+                // Plan Description and Privacy (read-only)
+                HStack {
+                    VStack(alignment: .leading, spacing: 4) {
+                        if let description = plan.description, !description.isEmpty {
+                            Text(description)
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                        } else {
+                            Text("No description")
+                                .font(.subheadline)
+                                .foregroundStyle(.tertiary)
+                                .italic()
+                        }
+                    }
+                    
+                    Spacer()
+                    
+                    VStack(alignment: .trailing, spacing: 4) {
+                        if plan.isPublic {
+                            Label("Public", systemImage: "globe")
+                                .font(.caption)
+                                .foregroundColor(.blue)
+                        } else {
+                            Label("Private", systemImage: "lock.fill")
+                                .font(.caption)
+                                .foregroundColor(.gray)
+                        }
                     }
                 }
             }
             
-            // Plan Metadata Grid
-            LazyVGrid(columns: [
-                GridItem(.flexible()),
-                GridItem(.flexible()),
-                GridItem(.flexible())
-            ], spacing: 12) {
-                // Duration Info
-                VStack(alignment: .leading, spacing: 2) {
-                    Label("Duration", systemImage: "clock")
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
-                    
-                    if let actualDuration = plan.actualDuration {
-                        Text("\(actualDuration + 1) days")
-                            .font(.subheadline)
-                            .fontWeight(.medium)
-                    } else if let estimatedDuration = plan.estimatedDuration {
-                        Text("~\(estimatedDuration) days")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                    } else {
-                        Text("Not set")
-                            .font(.subheadline)
-                            .foregroundStyle(.tertiary)
-                    }
-                }
-                
-                // Date Info
-                VStack(alignment: .leading, spacing: 2) {
-                    Label("Dates", systemImage: "calendar")
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
-                    
-                    if let dateRange = plan.dateRangeString {
-                        Text(dateRange)
-                            .font(.subheadline)
-                            .fontWeight(.medium)
-                    } else {
-                        Text("Flexible")
-                            .font(.subheadline)
-                            .foregroundStyle(.tertiary)
-                    }
-                }
-                
-                // Items Count
-                VStack(alignment: .leading, spacing: 2) {
-                    Label("Items", systemImage: "mappin.and.ellipse")
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
-                    
-                    Text("\(plan.items.count)")
+            if isEditMode {
+                // Edit mode controls
+                VStack(alignment: .leading, spacing: 16) {
+                    // Privacy Toggle
+                    Toggle("Make plan public", isOn: $editIsPublic)
                         .font(.subheadline)
-                        .fontWeight(.medium)
+                    
+                    // Duration Field
+                    HStack {
+                        Text("Estimated Duration")
+                            .font(.subheadline)
+                        Spacer()
+                        TextField("Days", value: $editEstimatedDuration, format: .number)
+                            .textFieldStyle(.roundedBorder)
+                            .frame(width: 80)
+                        Text("days")
+                            .font(.subheadline)
+                    }
+                    
+                    // Date Controls
+                    VStack(alignment: .leading, spacing: 12) {
+                        Toggle("Include specific dates", isOn: $editIncludeDates)
+                            .font(.subheadline)
+                        
+                        if editIncludeDates {
+                            VStack(spacing: 8) {
+                                DatePicker("Start Date", selection: $editStartDate, displayedComponents: .date)
+                                DatePicker("End Date", selection: $editEndDate, displayedComponents: .date)
+                            }
+                        }
+                    }
+                }
+            } else {
+                // Plan Metadata Grid (read-only)
+                LazyVGrid(columns: [
+                    GridItem(.flexible()),
+                    GridItem(.flexible()),
+                    GridItem(.flexible())
+                ], spacing: 12) {
+                    // Duration Info
+                    VStack(alignment: .leading, spacing: 2) {
+                        Label("Duration", systemImage: "clock")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                        
+                        if let actualDuration = plan.actualDuration {
+                            Text("\(actualDuration + 1) days")
+                                .font(.subheadline)
+                                .fontWeight(.medium)
+                        } else if let estimatedDuration = plan.estimatedDuration {
+                            Text("~\(estimatedDuration) days")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                        } else {
+                            Text("Not set")
+                                .font(.subheadline)
+                                .foregroundStyle(.tertiary)
+                        }
+                    }
+                    
+                    // Date Info
+                    VStack(alignment: .leading, spacing: 2) {
+                        Label("Dates", systemImage: "calendar")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                        
+                        if let dateRange = plan.dateRangeString {
+                            Text(dateRange)
+                                .font(.subheadline)
+                                .fontWeight(.medium)
+                        } else {
+                            Text("Flexible")
+                                .font(.subheadline)
+                                .foregroundStyle(.tertiary)
+                        }
+                    }
+                    
+                    // Items Count
+                    VStack(alignment: .leading, spacing: 2) {
+                        Label("Items", systemImage: "mappin.and.ellipse")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                        
+                        Text("\(plan.items.count)")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                    }
                 }
             }
             
@@ -419,6 +478,54 @@ struct PlanDetailView: View {
     private func removeItem(_ item: PlanItem) {
         let updatedPlan = appState.removePlanItem(itemId: item.id, from: plan)
         print("✅ Removed item: \(item.displayName)")
+    }
+    
+    // MARK: - Inline Editing Methods
+    
+    private func startEditing() {
+        // Initialize edit state with current plan values
+        editTitle = plan.title
+        editDescription = plan.description ?? ""
+        editIsPublic = plan.isPublic
+        editEstimatedDuration = plan.estimatedDuration
+        editStartDate = plan.startDate ?? Date()
+        editEndDate = plan.endDate ?? Date().addingTimeInterval(86400) // Tomorrow
+        editIncludeDates = plan.startDate != nil || plan.endDate != nil
+        
+        // Enter edit mode
+        isEditMode = true
+    }
+    
+    private func cancelEditing() {
+        // Reset all edit state and exit edit mode
+        isEditMode = false
+        editTitle = ""
+        editDescription = ""
+        editIsPublic = false
+        editEstimatedDuration = nil
+        editStartDate = Date()
+        editEndDate = Date()
+        editIncludeDates = false
+    }
+    
+    private func saveChanges() {
+        // Create updated plan with new values
+        var updatedPlan = plan
+        updatedPlan.title = editTitle.isEmpty ? plan.title : editTitle
+        updatedPlan.description = editDescription.isEmpty ? nil : editDescription
+        updatedPlan.isPublic = editIsPublic
+        updatedPlan.estimatedDuration = editEstimatedDuration
+        updatedPlan.startDate = editIncludeDates ? editStartDate : nil
+        updatedPlan.endDate = editIncludeDates ? editEndDate : nil
+        updatedPlan.updatedAt = Date()
+        
+        // Save through AppState
+        appState.savePlan(updatedPlan)
+        
+        // Exit edit mode
+        isEditMode = false
+        
+        print("✅ Updated plan: \(updatedPlan.title)")
     }
 }
 
