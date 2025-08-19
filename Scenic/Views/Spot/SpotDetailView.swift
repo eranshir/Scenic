@@ -1804,62 +1804,90 @@ struct InfinitePhotoCarousel: View {
     var body: some View {
         GeometryReader { geometry in
             let screenWidth = geometry.size.width
-            let itemWidth = screenWidth * 0.85  // Slightly smaller to ensure full visibility
-            let itemSpacing: CGFloat = 10  // Spacing between photos
-            let totalItemWidth = itemWidth + itemSpacing
             
-            HStack(spacing: itemSpacing) {
-                ForEach(Array(infiniteMedia.enumerated()), id: \.offset) { index, mediaItem in
-                    let realIndex = index % media.count
-                    let isCenterItem = index == internalIndex
-                    
+            if media.count == 1 {
+                // Single photo - no carousel behavior
+                let itemWidth = screenWidth * 0.85  // Keep same width as carousel
+                
+                HStack {
+                    Spacer()
                     CarouselPhotoItem(
-                        mediaItem: mediaItem,
-                        isCenterItem: isCenterItem,
+                        mediaItem: media[0],
+                        isCenterItem: true,
                         itemWidth: itemWidth,
                         sideItemWidth: itemWidth * 0.2,
-                        selectedIndex: realIndex,
+                        selectedIndex: 0,
                         onTap: {
-                            if isCenterItem {
-                                onPhotoTap()
-                            } else {
-                                withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
-                                    moveToIndex(index)
-                                }
-                            }
+                            onPhotoTap()
                         }
                     )
+                    Spacer()
                 }
+            } else {
+                // Multiple photos - use full carousel
+                let itemWidth = screenWidth * 0.85  // Slightly smaller to ensure full visibility
+                let itemSpacing: CGFloat = 10  // Spacing between photos
+                let totalItemWidth = itemWidth + itemSpacing
+                
+                HStack(spacing: itemSpacing) {
+                    ForEach(Array(infiniteMedia.enumerated()), id: \.offset) { index, mediaItem in
+                        let realIndex = index % media.count
+                        let isCenterItem = index == internalIndex
+                        
+                        CarouselPhotoItem(
+                            mediaItem: mediaItem,
+                            isCenterItem: isCenterItem,
+                            itemWidth: itemWidth,
+                            sideItemWidth: itemWidth * 0.2,
+                            selectedIndex: realIndex,
+                            onTap: {
+                                if isCenterItem {
+                                    onPhotoTap()
+                                } else {
+                                    withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
+                                        moveToIndex(index)
+                                    }
+                                }
+                            }
+                        )
+                    }
+                }
+                .offset(x: calculateOffset(screenWidth: screenWidth, itemWidth: totalItemWidth))
+                .gesture(
+                    DragGesture()
+                        .onChanged { value in
+                            if !isAnimating {
+                                dragOffset = value.translation.width
+                            }
+                        }
+                        .onEnded { value in
+                            if !isAnimating {
+                                handleDragEnd(value: value, itemWidth: totalItemWidth)
+                            }
+                        }
+                )
             }
-            .offset(x: calculateOffset(screenWidth: screenWidth, itemWidth: totalItemWidth))
-            .gesture(
-                DragGesture()
-                    .onChanged { value in
-                        if !isAnimating {
-                            dragOffset = value.translation.width
-                        }
-                    }
-                    .onEnded { value in
-                        if !isAnimating {
-                            handleDragEnd(value: value, itemWidth: totalItemWidth)
-                        }
-                    }
-            )
         }
         .onAppear {
-            // Start with first photo that has heading data, or just the first photo
-            if let firstWithHeading = media.firstIndex(where: { $0.exifData?.gpsDirection != nil }) {
-                internalIndex = centerOffset + firstWithHeading
-                selectedIndex = firstWithHeading
-            } else {
-                internalIndex = centerOffset
+            if media.count == 1 {
+                // Single photo - always use index 0
                 selectedIndex = 0
+                internalIndex = 0
+            } else {
+                // Multiple photos - start with first photo that has heading data, or just the first photo
+                if let firstWithHeading = media.firstIndex(where: { $0.exifData?.gpsDirection != nil }) {
+                    internalIndex = centerOffset + firstWithHeading
+                    selectedIndex = firstWithHeading
+                } else {
+                    internalIndex = centerOffset
+                    selectedIndex = 0
+                }
             }
         }
         .onChange(of: selectedIndex) { oldValue, newValue in
             // Only update internal index when external selectedIndex changes from outside
-            // and we're not already animating
-            if !isAnimating && oldValue != newValue {
+            // and we're not already animating (skip for single photos)
+            if media.count > 1 && !isAnimating && oldValue != newValue {
                 // Check if we should take the shortest path
                 let currentRealIndex = internalIndex % media.count
                 let normalizedCurrent = currentRealIndex < 0 ? currentRealIndex + media.count : currentRealIndex
