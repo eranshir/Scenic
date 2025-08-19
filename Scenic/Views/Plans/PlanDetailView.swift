@@ -34,16 +34,8 @@ struct PlanDetailView: View {
                     VStack(spacing: 0) {
                         planHeader
                         
-                        viewModeSelector
-                        
-                        Group {
-                            switch viewMode {
-                            case .timeline:
-                                timelineView
-                            case .map:
-                                mapView
-                            }
-                        }
+                        // In edit mode, only show timeline view (spots/POIs list)
+                        timelineView
                     }
                 }
             } else {
