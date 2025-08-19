@@ -266,39 +266,11 @@ struct PlanDetailView: View {
                     }
                 }
             }
-            
-            if let stats = planStats {
-                HStack(spacing: 20) {
-                    ForEach(stats, id: \.label) { stat in
-                        VStack {
-                            Text("\(stat.count)")
-                                .font(.headline)
-                                .fontWeight(.semibold)
-                            Text(stat.label)
-                                .font(.caption2)
-                                .foregroundColor(.secondary)
-                        }
-                    }
-                    Spacer()
-                }
-            }
         }
         .padding()
         .background(Color(.systemBackground))
     }
     
-    private var planStats: [(label: String, count: Int)]? {
-        let stats = plan.stats
-        guard stats.totalItems > 0 else { return nil }
-        
-        var result: [(label: String, count: Int)] = []
-        if stats.spotCount > 0 { result.append(("Spots", stats.spotCount)) }
-        if stats.accommodationCount > 0 { result.append(("Hotels", stats.accommodationCount)) }
-        if stats.restaurantCount > 0 { result.append(("Dining", stats.restaurantCount)) }
-        if stats.attractionCount > 0 { result.append(("Attractions", stats.attractionCount)) }
-        
-        return result.isEmpty ? nil : result
-    }
     
     private var viewModeSelector: some View {
         Picker("View Mode", selection: $viewMode) {
