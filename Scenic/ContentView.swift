@@ -8,6 +8,19 @@ struct ContentView: View {
     var body: some View {
         if showTestView {
             TestConnectionView()
+        } else if appState.isCheckingAuthStatus {
+            // Show loading screen while checking authentication
+            VStack {
+                Spacer()
+                ProgressView()
+                    .scaleEffect(1.5)
+                    .padding()
+                Text("Loading...")
+                    .font(.headline)
+                    .foregroundColor(.secondary)
+                Spacer()
+            }
+            .background(Color(.systemBackground))
         } else if !appState.isAuthenticated {
             AuthenticationView()
         } else {

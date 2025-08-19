@@ -13,6 +13,7 @@ class AppState: ObservableObject {
     @Published var journalEntries: [Media] = []
     @Published var isLoading = false
     @Published var errorMessage: String?
+    @Published var isCheckingAuthStatus = true // Track if we're still checking auth status
     
     @Published var selectedSpot: Spot?
     @Published var selectedPlan: Plan?
@@ -41,6 +42,7 @@ class AppState: ObservableObject {
                 // No existing session, show auth screen
                 await MainActor.run {
                     isAuthenticated = false
+                    isCheckingAuthStatus = false // Done checking
                 }
             }
         }
@@ -49,6 +51,7 @@ class AppState: ObservableObject {
     @MainActor
     func handleExistingSession(_ session: Session) {
         isAuthenticated = true
+        isCheckingAuthStatus = false // Done checking
         
         let user = session.user
         
@@ -148,6 +151,7 @@ class AppState: ObservableObject {
                 spots = []
                 plans = []
                 journalEntries = []
+                isCheckingAuthStatus = false // Not checking anymore after sign out
             }
         }
     }

@@ -4,6 +4,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## CRITICAL RULES
 
+### File Organization
+- **Documentation Files**: Always create `.md` documentation files in `/Scenic/documents/` directory
+- **Script Files**: Always create script files (`.js`, `.py`, `.sh`, etc.) in `/scripts/` directory
+- **Project Plans**: All project plans, specifications, and planning documents go in `/Scenic/documents/`
+- **Import/Utility Scripts**: All data processing, import, and utility scripts go in `/scripts/`
+
 ### Package Management
 - **NEVER** delete, remove, or modify Swift Package Manager dependencies in Xcode project files without explicit user approval
 - **NEVER** remove package references from project.pbxproj without consulting the user first
