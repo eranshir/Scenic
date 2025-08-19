@@ -2067,6 +2067,9 @@ struct ComprehensivePhotoDetailView: View {
                             )
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
                             .background(Color.black)
+                            .onTapGesture {
+                                showingFullScreenPhoto = true
+                            }
                             
                             // Navigation overlay for multiple photos
                             if media.count > 1 {
@@ -3020,17 +3023,6 @@ struct FullScreenPhotoView: View {
                     }
                     
                     Spacer()
-                    
-                    // Share button (placeholder)
-                    Button(action: {
-                        // TODO: Add share functionality
-                    }) {
-                        Image(systemName: "square.and.arrow.up")
-                            .font(.title2)
-                            .foregroundColor(.white)
-                            .background(Circle().fill(.ultraThinMaterial))
-                    }
-                    .padding(.trailing, 20)
                 }
                 .padding(.top, 20)
                 
