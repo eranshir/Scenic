@@ -28,17 +28,38 @@ struct PlanDetailView: View {
     }
     
     var body: some View {
-        VStack(spacing: 0) {
-            planHeader
-            
-            viewModeSelector
-            
-            Group {
-                switch viewMode {
-                case .timeline:
-                    timelineView
-                case .map:
-                    mapView
+        Group {
+            if isEditMode {
+                ScrollView {
+                    VStack(spacing: 0) {
+                        planHeader
+                        
+                        viewModeSelector
+                        
+                        Group {
+                            switch viewMode {
+                            case .timeline:
+                                timelineView
+                            case .map:
+                                mapView
+                            }
+                        }
+                    }
+                }
+            } else {
+                VStack(spacing: 0) {
+                    planHeader
+                    
+                    viewModeSelector
+                    
+                    Group {
+                        switch viewMode {
+                        case .timeline:
+                            timelineView
+                        case .map:
+                            mapView
+                        }
+                    }
                 }
             }
         }
@@ -307,17 +328,34 @@ struct PlanDetailView: View {
     }
     
     private var timelineView: some View {
-        ScrollView {
-            VStack(spacing: 20) {
-                if plan.startDate != nil {
-                    dateSelector
+        Group {
+            if isEditMode {
+                // In edit mode, don't add scroll view to avoid nesting
+                VStack(spacing: 20) {
+                    if plan.startDate != nil {
+                        dateSelector
+                    }
+                    
+                    timeline
+                    
+                    addItemButton
                 }
-                
-                timeline
-                
-                addItemButton
+                .padding()
+            } else {
+                // In read mode, use scroll view as before
+                ScrollView {
+                    VStack(spacing: 20) {
+                        if plan.startDate != nil {
+                            dateSelector
+                        }
+                        
+                        timeline
+                        
+                        addItemButton
+                    }
+                    .padding()
+                }
             }
-            .padding()
         }
     }
     
