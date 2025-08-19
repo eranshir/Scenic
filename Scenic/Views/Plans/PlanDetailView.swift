@@ -5,6 +5,7 @@ struct PlanDetailView: View {
     let plan: Plan
     @EnvironmentObject var appState: AppState
     @State private var selectedDate: Date = Date()
+    @State private var selectedDayIndex: Int = 0
     @State private var viewMode: ViewMode = .timeline
     @State private var showingAddItem = false
     @State private var showingShareSheet = false
@@ -25,6 +26,21 @@ struct PlanDetailView: View {
     enum ViewMode: String, CaseIterable {
         case timeline = "Timeline"
         case map = "Map"
+    }
+    
+    // Computed property to determine how many days to show
+    private var numberOfDaysToShow: Int {
+        if let startDate = plan.startDate, let endDate = plan.endDate {
+            // Use actual date range
+            let days = Calendar.current.dateComponents([.day], from: startDate, to: endDate).day ?? 0
+            return max(1, days + 1) // +1 to include both start and end dates
+        } else if let estimatedDuration = plan.estimatedDuration {
+            // Use estimated duration
+            return max(1, estimatedDuration)
+        } else {
+            // Default to 3 days if nothing is specified
+            return 3
+        }
     }
     
     var body: some View {
@@ -297,21 +313,37 @@ struct PlanDetailView: View {
     private var dateSelector: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 12) {
-                ForEach(0..<7, id: \.self) { dayOffset in
-                    let date = Calendar.current.date(byAdding: .day, value: dayOffset, to: plan.startDate ?? Date()) ?? Date()
+                ForEach(0..<numberOfDaysToShow, id: \.self) { dayOffset in
+                    let dayNumber = dayOffset + 1
                     
-                    Button(action: { selectedDate = date }) {
+                    Button(action: { 
+                        selectedDayIndex = dayOffset
+                        if let startDate = plan.startDate {
+                            selectedDate = Calendar.current.date(byAdding: .day, value: dayOffset, to: startDate) ?? Date()
+                        }
+                    }) {
                         VStack(spacing: 4) {
-                            Text(dayName(date))
-                                .font(.caption2)
-                                .foregroundColor(.secondary)
-                            Text("\(Calendar.current.component(.day, from: date))")
-                                .font(.headline)
+                            if let startDate = plan.startDate {
+                                // Show actual dates
+                                let date = Calendar.current.date(byAdding: .day, value: dayOffset, to: startDate) ?? Date()
+                                Text(dayName(date))
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
+                                Text("\(Calendar.current.component(.day, from: date))")
+                                    .font(.headline)
+                            } else {
+                                // Show "Day X" format
+                                Text("Day")
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
+                                Text("\(dayNumber)")
+                                    .font(.headline)
+                            }
                         }
                         .padding(.horizontal, 16)
                         .padding(.vertical, 8)
-                        .background(Calendar.current.isDate(selectedDate, inSameDayAs: date) ? Color.green : Color(.systemGray6))
-                        .foregroundColor(Calendar.current.isDate(selectedDate, inSameDayAs: date) ? .white : .primary)
+                        .background(dayOffset == selectedDayIndex ? Color.green : Color(.systemGray6))
+                        .foregroundColor(dayOffset == selectedDayIndex ? .white : .primary)
                         .cornerRadius(10)
                     }
                 }
@@ -324,9 +356,7 @@ struct PlanDetailView: View {
             if isEditMode {
                 // In edit mode, don't add scroll view to avoid nesting
                 VStack(spacing: 20) {
-                    if plan.startDate != nil {
-                        dateSelector
-                    }
+                    dateSelector
                     
                     timeline
                     
@@ -337,9 +367,7 @@ struct PlanDetailView: View {
                 // In read mode, use scroll view as before
                 ScrollView {
                     VStack(spacing: 20) {
-                        if plan.startDate != nil {
-                            dateSelector
-                        }
+                        dateSelector
                         
                         timeline
                         
