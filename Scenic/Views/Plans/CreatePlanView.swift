@@ -87,37 +87,17 @@ struct CreatePlanView: View {
         isCreating = true
         errorMessage = nil
         
-        // Create new plan
-        let newPlan = Plan(
-            id: UUID(),
-            title: title,
-            description: description.isEmpty ? nil : description,
-            createdBy: appState.currentUser?.id ?? UUID(),
-            createdAt: Date(),
-            updatedAt: Date(),
-            isPublic: isPublic,
-            originalPlanId: nil,
-            estimatedDuration: estimatedDuration,
-            startDate: includeDates ? startDate : nil,
-            endDate: includeDates ? endDate : nil,
-            items: []
-        )
+        // Create new plan through AppState which handles persistence
+        var newPlan = appState.createPlan(title: title, description: description.isEmpty ? nil : description)
         
-        // Add to app state (temporary - will use proper data service later)
-        appState.plans.append(newPlan)
+        // Update the plan with additional properties that weren't in the basic create method
+        newPlan.isPublic = isPublic
+        newPlan.estimatedDuration = estimatedDuration
+        newPlan.startDate = includeDates ? startDate : nil
+        newPlan.endDate = includeDates ? endDate : nil
         
-        // TODO: Save to database via PlanDataService
-        // Task {
-        //     do {
-        //         try await PlanDataService.shared.createPlan(newPlan)
-        //     } catch {
-        //         await MainActor.run {
-        //             errorMessage = "Failed to create plan: \(error.localizedDescription)"
-        //             isCreating = false
-        //         }
-        //         return
-        //     }
-        // }
+        // Save the updated plan
+        appState.savePlan(newPlan)
         
         isCreating = false
         dismiss()

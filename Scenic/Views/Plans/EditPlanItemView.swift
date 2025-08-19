@@ -109,19 +109,22 @@ struct EditPlanItemView: View {
     }
     
     private func saveChanges() {
-        guard let planIndex = appState.plans.firstIndex(where: { $0.id == plan.id }),
-              let itemIndex = appState.plans[planIndex].items.firstIndex(where: { $0.id == item.id }) else {
-            return
+        // Create updated plan with modified item
+        var updatedPlan = plan
+        
+        if let itemIndex = updatedPlan.items.firstIndex(where: { $0.id == item.id }) {
+            // Update the item with new values
+            updatedPlan.items[itemIndex].scheduledDate = includeSchedule ? scheduledDate : nil
+            updatedPlan.items[itemIndex].scheduledStartTime = includeSchedule ? startTime : nil
+            updatedPlan.items[itemIndex].scheduledEndTime = includeSchedule ? endTime : nil
+            updatedPlan.items[itemIndex].timingPreference = timingPreference
+            updatedPlan.items[itemIndex].notes = notes.isEmpty ? nil : notes
+            
+            // Save the updated plan through AppState
+            appState.savePlan(updatedPlan)
+            
+            print("✅ Updated plan item: \(item.displayName)")
         }
-        
-        // Update the item with new values
-        appState.plans[planIndex].items[itemIndex].scheduledDate = includeSchedule ? scheduledDate : nil
-        appState.plans[planIndex].items[itemIndex].scheduledStartTime = includeSchedule ? startTime : nil
-        appState.plans[planIndex].items[itemIndex].scheduledEndTime = includeSchedule ? endTime : nil
-        appState.plans[planIndex].items[itemIndex].timingPreference = timingPreference
-        appState.plans[planIndex].items[itemIndex].notes = notes.isEmpty ? nil : notes
-        
-        print("✅ Updated plan item: \(item.displayName)")
         dismiss()
     }
 }

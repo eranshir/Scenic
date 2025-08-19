@@ -356,34 +356,12 @@ struct PlanDetailView: View {
     }
     
     private func moveItems(from source: IndexSet, to destination: Int) {
-        guard let planIndex = appState.plans.firstIndex(where: { $0.id == plan.id }) else { return }
-        
-        var updatedItems = appState.plans[planIndex].sortedItems
-        updatedItems.move(fromOffsets: source, toOffset: destination)
-        
-        // Update order indices
-        for (index, item) in updatedItems.enumerated() {
-            if let itemIndex = appState.plans[planIndex].items.firstIndex(where: { $0.id == item.id }) {
-                appState.plans[planIndex].items[itemIndex].orderIndex = index
-            }
-        }
-        
+        let updatedPlan = appState.reorderPlanItems(plan: plan, from: source, to: destination)
         print("✅ Reordered plan items")
     }
     
     private func removeItem(_ item: PlanItem) {
-        guard let planIndex = appState.plans.firstIndex(where: { $0.id == plan.id }) else { return }
-        
-        appState.plans[planIndex].items.removeAll { $0.id == item.id }
-        
-        // Update order indices for remaining items
-        let sortedItems = appState.plans[planIndex].sortedItems
-        for (index, remainingItem) in sortedItems.enumerated() {
-            if let itemIndex = appState.plans[planIndex].items.firstIndex(where: { $0.id == remainingItem.id }) {
-                appState.plans[planIndex].items[itemIndex].orderIndex = index
-            }
-        }
-        
+        let updatedPlan = appState.removePlanItem(itemId: item.id, from: plan)
         print("✅ Removed item: \(item.displayName)")
     }
 }
@@ -395,6 +373,19 @@ struct PlanItemRow: View {
     let onRemove: (PlanItem) -> Void
     
     var body: some View {
+        Group {
+            if item.type == .spot && !isEditMode, let spot = item.spot {
+                NavigationLink(destination: SpotDetailView(spot: spot)) {
+                    rowContent
+                }
+                .buttonStyle(PlainButtonStyle())
+            } else {
+                rowContent
+            }
+        }
+    }
+    
+    private var rowContent: some View {
         HStack(alignment: .top, spacing: 12) {
             ZStack {
                 Circle()
@@ -437,19 +428,28 @@ struct PlanItemRow: View {
             Spacer()
             
             if !isEditMode {
-                Menu {
-                    Button(action: { onEdit(item) }) {
-                        Label("Edit Time", systemImage: "clock")
+                HStack(spacing: 8) {
+                    // Show chevron for spot items to indicate they're tappable
+                    if item.type == .spot && item.spot != nil {
+                        Image(systemName: "chevron.right")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
                     }
-                    Button(action: {}) {
-                        Label("Mark as Backup", systemImage: "star")
+                    
+                    Menu {
+                        Button(action: { onEdit(item) }) {
+                            Label("Edit Time", systemImage: "clock")
+                        }
+                        Button(action: {}) {
+                            Label("Mark as Backup", systemImage: "star")
+                        }
+                        Button(role: .destructive, action: { onRemove(item) }) {
+                            Label("Remove", systemImage: "trash")
+                        }
+                    } label: {
+                        Image(systemName: "ellipsis")
+                            .foregroundColor(.secondary)
                     }
-                    Button(role: .destructive, action: { onRemove(item) }) {
-                        Label("Remove", systemImage: "trash")
-                    }
-                } label: {
-                    Image(systemName: "ellipsis")
-                        .foregroundColor(.secondary)
                 }
             }
         }

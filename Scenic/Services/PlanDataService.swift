@@ -53,12 +53,12 @@ class PlanDataService: ObservableObject {
         isLoading = false
     }
     
-    func createPlan(title: String, description: String? = nil) -> Plan {
+    func createPlan(title: String, description: String? = nil, createdBy: UUID? = nil) -> Plan {
         let plan = Plan(
             id: UUID(),
             title: title,
             description: description,
-            createdBy: UUID(), // TODO: Get from current user
+            createdBy: createdBy ?? UUID(),
             createdAt: Date(),
             updatedAt: Date(),
             isPublic: false,

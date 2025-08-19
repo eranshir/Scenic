@@ -3,6 +3,7 @@ import SwiftUI
 import Combine
 import Supabase
 
+@MainActor
 class AppState: ObservableObject {
     @Published var currentUser: User?
     @Published var isAuthenticated = false
@@ -14,6 +15,10 @@ class AppState: ObservableObject {
     @Published var isLoading = false
     @Published var errorMessage: String?
     @Published var isCheckingAuthStatus = true // Track if we're still checking auth status
+    
+    // Data services
+    private var planDataService: PlanDataService
+    private var cancellables = Set<AnyCancellable>()
     
     @Published var selectedSpot: Spot?
     @Published var selectedPlan: Plan?
@@ -29,8 +34,22 @@ class AppState: ObservableObject {
     }
     
     init() {
+        // Initialize data services
+        self.planDataService = PlanDataService()
+        
         // Check for existing session on app launch
         checkExistingSession()
+        
+        // Set up bindings after initialization
+        setupBindings()
+    }
+    
+    private func setupBindings() {
+        // Bind planDataService.plans to AppState.plans
+        planDataService.$plans
+            .receive(on: DispatchQueue.main)
+            .assign(to: \.plans, on: self)
+            .store(in: &cancellables)
     }
     
     private func checkExistingSession() {
@@ -154,6 +173,36 @@ class AppState: ObservableObject {
                 isCheckingAuthStatus = false // Not checking anymore after sign out
             }
         }
+    }
+    
+    // MARK: - Plan Management
+    
+    func createPlan(title: String, description: String? = nil) -> Plan {
+        return planDataService.createPlan(title: title, description: description, createdBy: currentUser?.id)
+    }
+    
+    func savePlan(_ plan: Plan) {
+        planDataService.savePlan(plan)
+    }
+    
+    func deletePlan(_ plan: Plan) {
+        planDataService.deletePlan(plan)
+    }
+    
+    func addSpotToPlan(spot: Spot, plan: Plan, timingPreference: TimingPreference? = nil) -> Plan {
+        return planDataService.addSpotToPlan(spot: spot, plan: plan, timingPreference: timingPreference)
+    }
+    
+    func addPOIToPlan(poi: POIData, type: PlanItemType, plan: Plan, timingPreference: TimingPreference? = nil) -> Plan {
+        return planDataService.addPOIToPlan(poi: poi, type: type, plan: plan, timingPreference: timingPreference)
+    }
+    
+    func removePlanItem(itemId: UUID, from plan: Plan) -> Plan {
+        return planDataService.removePlanItem(itemId: itemId, from: plan)
+    }
+    
+    func reorderPlanItems(plan: Plan, from source: IndexSet, to destination: Int) -> Plan {
+        return planDataService.reorderPlanItems(plan: plan, from: source, to: destination)
     }
 }
 
