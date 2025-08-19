@@ -28,6 +28,7 @@ const CONFIG = {
     BATCH_SIZE: 10,
     RATE_LIMIT_MS: 2000, // 2 seconds between batches
     PROXIMITY_THRESHOLD_METERS: 100, // Group photos within 100m into same spot
+    CHECK_DATABASE_PROXIMITY: true, // Check existing database spots for proximity (prevents duplicates)
     METADATA_FILE: './flickr_collection/metadata.json',
     PHOTOS_DIR: './flickr_collection/photos/',
     DRY_RUN: false
@@ -41,6 +42,7 @@ class FlickrImporter {
             processedPhotos: 0,
             skippedPhotos: 0,
             createdSpots: 0,
+            reusedSpots: 0,
             createdPhotographers: 0,
             errors: []
         };
@@ -228,6 +230,7 @@ class FlickrImporter {
     findNearbySpot(latitude, longitude) {
         const threshold = this.config.PROXIMITY_THRESHOLD_METERS;
         
+        // Check in-memory cache first (for performance)
         for (const [spotKey, spot] of this.spotCache) {
             const distance = this.calculateDistance(
                 latitude, longitude,
@@ -240,6 +243,47 @@ class FlickrImporter {
         }
         
         return null;
+    }
+    
+    async findNearbySpotInDatabase(latitude, longitude) {
+        const threshold = this.config.PROXIMITY_THRESHOLD_METERS;
+        
+        try {
+            // Get all spots from database to check proximity
+            // Note: In production, you'd use PostGIS ST_DWithin for better performance
+            const { data: spots, error } = await this.supabase
+                .from('spots')
+                .select('id, title, latitude, longitude, created_at');
+            
+            if (error) {
+                console.log(`⚠️ Error fetching spots for proximity check: ${error.message}`);
+                return null;
+            }
+            
+            // Check each spot for proximity
+            for (const spot of spots) {
+                const distance = this.calculateDistance(
+                    latitude, longitude,
+                    spot.latitude, spot.longitude
+                );
+                
+                if (distance <= threshold) {
+                    console.log(`🎯 Found nearby spot in database: "${spot.title}" (${Math.round(distance)}m away)`);
+                    
+                    // Add to cache for future lookups in this session
+                    const cacheKey = `${spot.latitude},${spot.longitude}`;
+                    this.spotCache.set(cacheKey, spot);
+                    
+                    return spot;
+                }
+            }
+            
+            return null;
+            
+        } catch (error) {
+            console.log(`⚠️ Error checking database for nearby spots: ${error.message}`);
+            return null;
+        }
     }
     
     calculateDistance(lat1, lon1, lat2, lon2) {
@@ -260,11 +304,22 @@ class FlickrImporter {
     async createOrFindSpot(photoData, photographerId) {
         const { latitude, longitude } = photoData.location;
         
-        // Check for nearby existing spot
-        const nearbySpot = this.findNearbySpot(latitude, longitude);
+        // Check for nearby existing spot (in-memory cache first)
+        let nearbySpot = this.findNearbySpot(latitude, longitude);
         if (nearbySpot) {
-            console.log(`📍 Using existing nearby spot: ${nearbySpot.title}`);
+            console.log(`📍 Using existing nearby spot from cache: ${nearbySpot.title}`);
+            this.stats.reusedSpots++;
             return nearbySpot;
+        }
+        
+        // Check database for nearby existing spots (if enabled)
+        if (this.config.CHECK_DATABASE_PROXIMITY) {
+            nearbySpot = await this.findNearbySpotInDatabase(latitude, longitude);
+            if (nearbySpot) {
+                console.log(`📍 Using existing nearby spot from database: ${nearbySpot.title}`);
+                this.stats.reusedSpots++;
+                return nearbySpot;
+            }
         }
         
         // Create new spot
@@ -594,9 +649,17 @@ class FlickrImporter {
         console.log(`Total photos: ${this.stats.totalPhotos}`);
         console.log(`Processed: ${this.stats.processedPhotos} ✅`);
         console.log(`Skipped: ${this.stats.skippedPhotos} ⏭️`);
-        console.log(`Created spots: ${this.stats.createdSpots} 🗺️`);
+        console.log(`Created spots: ${this.stats.createdSpots} 🆕`);
+        console.log(`Reused existing spots: ${this.stats.reusedSpots} ♻️`);
+        console.log(`Total spots affected: ${this.stats.createdSpots + this.stats.reusedSpots} 🗺️`);
         console.log(`Created photographers: ${this.stats.createdPhotographers} 👤`);
         console.log(`Errors: ${this.stats.errors.length} ❌`);
+        
+        if (this.config.CHECK_DATABASE_PROXIMITY) {
+            console.log(`Database proximity checking: ✅ Enabled (${this.config.PROXIMITY_THRESHOLD_METERS}m threshold)`);
+        } else {
+            console.log(`Database proximity checking: ❌ Disabled (cache-only)`);
+        }
         
         if (this.stats.errors.length > 0) {
             console.log('\n❌ ERRORS:');
@@ -624,6 +687,8 @@ async function main() {
             options.startIndex = parseInt(arg.split('=')[1]) || 0;
         } else if (arg.startsWith('--max-photos=')) {
             options.maxPhotos = parseInt(arg.split('=')[1]) || null;
+        } else if (arg.startsWith('--no-database-check')) {
+            options.CHECK_DATABASE_PROXIMITY = false;
         } else if (arg === '--help') {
             console.log(`
 Flickr Bulk Import Script for Scenic App
@@ -635,7 +700,15 @@ Options:
   --batch-size=N         Number of photos to process per batch (default: 10)
   --max-photos=N         Maximum total number of photos to import (default: no limit)
   --start-index=N        Start processing from index N (default: 0)
+  --no-database-check    Disable database proximity checking (cache-only mode)
   --help                 Show this help message
+
+Features:
+  • Database-aware proximity checking prevents duplicate spots on re-imports
+  • 100m proximity threshold groups nearby photos into the same spot
+  • Comprehensive error handling and progress reporting
+  • Cloudinary integration with optimized transformations
+  • Sun position calculations and metadata preservation
 
 Environment Variables:
   SUPABASE_SERVICE_KEY   Required: Supabase service role key
@@ -645,6 +718,7 @@ Examples:
   node flickr-bulk-import.js --dry-run
   node flickr-bulk-import.js --max-photos=5
   node flickr-bulk-import.js --batch-size=5 --max-photos=20 --start-index=100
+  node flickr-bulk-import.js --no-database-check  # Faster, cache-only mode
             `);
             process.exit(0);
         }

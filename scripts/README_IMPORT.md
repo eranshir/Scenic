@@ -80,9 +80,19 @@ node flickr-bulk-import.js --start-index=100
 ### Command Line Options
 
 - `--dry-run` - Run without making actual changes
-- `--batch-size=N` - Process N photos per batch (default: 10)
+- `--batch-size=N` - Process N photos per batch (default: 10)  
+- `--max-photos=N` - Limit import to N photos total
 - `--start-index=N` - Start from photo index N (for resuming)
-- `--help` - Show help message
+- `--no-database-check` - Disable database proximity checking (faster, cache-only)
+- `--help` - Show full help message
+
+### Key Features
+
+✅ **Database-Aware Duplicate Prevention**: Checks existing spots to prevent duplicates on re-imports  
+⚡ **Performance Optimized**: In-memory cache + optional database checking  
+📊 **Comprehensive Reporting**: Tracks created vs reused spots with detailed statistics  
+🎯 **Smart Proximity Grouping**: Photos within 100m grouped into same spot  
+🔧 **Configurable**: Multiple options for different use cases
 
 ## What the Script Does
 
